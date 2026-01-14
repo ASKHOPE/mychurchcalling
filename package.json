@@ -1,0 +1,27 @@
+{
+  "name": "tauri-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "@workos-inc/authkit-react": "^0.15.1",
+    "@workos-inc/node": "^8.0.0",
+    "convex": "^1.31.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/node": "^25.0.8",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  }
+}
