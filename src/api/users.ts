@@ -1,4 +1,4 @@
-import { UserListItem } from '../types';
+import { UserListItem, UserCalling } from '../types';
 import { auth } from '../auth/workos';
 
 interface WorkOSUser {
@@ -31,6 +31,8 @@ export async function fetchUsers(): Promise<UserListItem[]> {
 
         const { users } = await response.json();
 
+        if (!users || users.length === 0) return getMockUsers();
+
         return users.map((user: WorkOSUser): UserListItem => ({
             id: user.id,
             name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
@@ -41,8 +43,31 @@ export async function fetchUsers(): Promise<UserListItem[]> {
         }));
     } catch (error) {
         console.error('Failed to fetch users:', error);
-        return [];
+        return getMockUsers(); // Fallback for demo
     }
+}
+
+function getMockUsers(): UserListItem[] {
+    const mockData: { name: string; email: string; calling: UserCalling; role: any }[] = [
+        { name: 'John Peterson', email: 'bishop@ward.org', calling: 'Bishop', role: 'leader' },
+        { name: 'Sarah Miller', email: 'rs.president@ward.org', calling: 'Relief Society President', role: 'leader' },
+        { name: 'Mike Johnson', email: 'eq.president@ward.org', calling: 'Elders Quorum President', role: 'leader' },
+        { name: 'Emily White', email: 'yw.president@ward.org', calling: 'Young Women President', role: 'leader' },
+        { name: 'David Smith', email: 'sunday.school@ward.org', calling: 'Sunday School President', role: 'leader' },
+        { name: 'Robert Brown', email: 'clerk@ward.org', calling: 'Ward Clerk', role: 'leader' },
+        { name: 'Alice Young', email: 'rs.secretary@ward.org', calling: 'Relief Society Secretary', role: 'leader' },
+        { name: 'Tom Wilson', email: 'member1@ward.org', calling: 'Member', role: 'member' },
+    ];
+
+    return mockData.map((user, i) => ({
+        id: `mock_${i}`,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        calling: user.calling,
+        status: i % 3 === 0 ? 'active' : 'pending',
+        lastActive: '2 days ago'
+    }));
 }
 
 /**

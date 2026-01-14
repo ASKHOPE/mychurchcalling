@@ -1,9 +1,11 @@
 import { User } from '../types';
+import { renderRoleTag, renderCallingTag } from '../components/Tags';
 
 export function renderHomePage(user: User | null): string {
   const greeting = getGreeting();
   const userName = user?.name?.split(' ')[0] || 'there';
   const role = user?.role || 'member';
+  const calling = user?.calling;
 
   return `
     <div class="page home-page">
@@ -13,7 +15,10 @@ export function renderHomePage(user: User | null): string {
             <span class="welcome-text">${greeting},</span>
             <div class="user-display">
               <h1>${userName}</h1>
-              ${renderRoleTag(role)}
+              <div class="tags-row">
+                ${renderRoleTag(role)}
+                ${calling ? renderCallingTag(calling) : ''}
+              </div>
             </div>
           </div>
           <p class="subtitle">Welcome to your MyChurchCalling workspace. Here's your ministry overview.</p>
@@ -129,7 +134,10 @@ export function renderHomePage(user: User | null): string {
                <img src="${user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user?.name}" class="mini-avatar" />
                <div class="mini-info">
                  <span class="mini-name">${user?.name}</span>
-                 ${renderRoleTag(role)}
+                 <div class="tags-row">
+                   ${renderRoleTag(role)}
+                   ${calling ? renderCallingTag(calling) : ''}
+                 </div>
                </div>
             </div>
           </div>
@@ -144,15 +152,4 @@ function getGreeting(): string {
   if (hour < 12) return 'Good morning';
   if (hour < 18) return 'Good afternoon';
   return 'Good evening';
-}
-
-export function renderRoleTag(role: string): string {
-  const icon = {
-    admin: '🛡️',
-    leader: '👑',
-    member: '👤',
-    viewer: '👁️'
-  }[role] || '👤';
-
-  return `<span class="role-tag ${role}">${icon} ${role}</span>`;
 }

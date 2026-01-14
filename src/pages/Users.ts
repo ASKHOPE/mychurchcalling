@@ -1,5 +1,6 @@
 import { UserListItem } from '../types';
 import { fetchUsers, inviteUser } from '../api/users';
+import { renderRoleTag, renderCallingTag } from '../components/Tags';
 
 export function renderUsersPage(users: UserListItem[] = []): string {
 
@@ -24,6 +25,7 @@ export function renderUsersPage(users: UserListItem[] = []): string {
             <select class="input-glass select-input" id="role-filter">
               <option value="">All Roles</option>
               <option value="admin">Admin</option>
+              <option value="leader">Leader</option>
               <option value="member">Member</option>
               <option value="viewer">Viewer</option>
             </select>
@@ -40,7 +42,7 @@ export function renderUsersPage(users: UserListItem[] = []): string {
           <thead>
             <tr>
               <th>User</th>
-              <th>Role</th>
+              <th>Role & Calling</th>
               <th>Status</th>
               <th>Last Active</th>
               <th>Actions</th>
@@ -68,6 +70,7 @@ export function renderUsersPage(users: UserListItem[] = []): string {
               <label for="invite-role">Role</label>
               <select id="invite-role" class="input-glass select-input">
                 <option value="member">Member</option>
+                <option value="leader">Leader</option>
                 <option value="viewer">Viewer</option>
                 <option value="admin">Admin</option>
               </select>
@@ -90,13 +93,6 @@ function renderUserRow(user: UserListItem): string {
     suspended: 'status-suspended',
   }[user.status];
 
-  const roleClass = {
-    admin: 'role-admin',
-    leader: 'role-leader',
-    member: 'role-member',
-    viewer: 'role-viewer',
-  }[user.role];
-
   return `
     <tr data-user-id="${user.id}">
       <td>
@@ -108,7 +104,12 @@ function renderUserRow(user: UserListItem): string {
           </div>
         </div>
       </td>
-      <td><span class="role-badge ${roleClass}">${user.role}</span></td>
+      <td>
+        <div class="tags-row">
+          ${renderRoleTag(user.role)}
+          ${user.calling ? renderCallingTag(user.calling) : ''}
+        </div>
+      </td>
       <td><span class="status-badge ${statusClass}">${user.status}</span></td>
       <td>${user.lastActive}</td>
       <td>
@@ -124,7 +125,6 @@ function renderUserRow(user: UserListItem): string {
 export async function loadUsers(): Promise<UserListItem[]> {
   const users = await fetchUsers();
 
-  // Update the table body
   const tbody = document.getElementById('users-table-body');
   if (tbody) {
     if (users.length > 0) {
@@ -162,7 +162,6 @@ export function attachUsersListeners(): void {
     const submitBtn = document.getElementById('submit-invite') as HTMLButtonElement;
     const email = emailInput.value;
 
-    // Show loading state
     submitBtn.textContent = 'Sending...';
     submitBtn.disabled = true;
 
@@ -172,17 +171,14 @@ export function attachUsersListeners(): void {
       alert(result.message);
       if (modal) modal.style.display = 'none';
       emailInput.value = '';
-      // Refresh users list
       await loadUsers();
     } else {
       alert(`Error: ${result.message}`);
     }
 
-    // Reset button
     submitBtn.textContent = 'Send Invitation';
     submitBtn.disabled = false;
   });
 
-  // Load users from WorkOS
   loadUsers();
 }
