@@ -75,9 +75,17 @@ export const callback = httpAction(async (ctx, request) => {
       accessToken: accessToken,
     };
 
-    // Encode session data as URL-safe base64
-    const encodedSession = Buffer.from(JSON.stringify(sessionData)).toString('base64url');
-    const encodedRefreshToken = Buffer.from(refreshToken).toString('base64url');
+    // Encode session data as URL-safe base64 (using btoa which is available in Convex runtime)
+    const sessionJson = JSON.stringify(sessionData);
+    const encodedSession = btoa(sessionJson)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+
+    const encodedRefreshToken = btoa(refreshToken)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
 
     // Redirect to app with session data
     const redirectUrl = new URL(APP_URL);
