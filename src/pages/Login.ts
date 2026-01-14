@@ -1,4 +1,4 @@
-export function renderLoginPage(isLoading: boolean): string {
+export function renderLoginPage(isLoading: boolean, isAuthenticated: boolean = false): string {
   return `
     <div class="login-page">
       <div class="login-container glass-container">
@@ -7,11 +7,11 @@ export function renderLoginPage(isLoading: boolean): string {
             <span class="logo-icon-lg">⛪</span>
           </div>
           <h1>MyChurchCalling</h1>
-          <p>Sign in to manage your church callings</p>
+          <p>${isAuthenticated ? 'Welcome back!' : 'Sign in to manage your church callings'}</p>
         </div>
 
         <div class="login-content">
-          ${isLoading ? renderLoadingState() : renderLoginButton()}
+          ${isLoading ? renderLoadingState() : (isAuthenticated ? renderDashboardButton() : renderLoginButton())}
         </div>
 
         <div class="login-footer">
@@ -40,13 +40,20 @@ function renderLoginButton(): string {
         <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      Continue with WorkOS
+      Sign In with WorkOS
     </button>
-    <div class="divider">
-      <span>or</span>
-    </div>
-    <button id="demo-login-btn" class="btn-secondary btn-large">
-      <span>🚀</span> Try Demo Mode
+  `;
+}
+
+function renderDashboardButton(): string {
+  return `
+    <button id="continue-dashboard-btn" class="btn-primary btn-large">
+      <span>🏠</span>
+      Continue to Dashboard
+    </button>
+    <button id="logout-btn" class="btn-secondary btn-large" style="margin-top: 1rem;">
+      <span>🚪</span>
+      Sign Out
     </button>
   `;
 }
@@ -60,7 +67,14 @@ function renderLoadingState(): string {
   `;
 }
 
-export function attachLoginListeners(onLogin: () => void): void {
+export function attachLoginListeners(onLogin: () => void, onContinue?: () => void, onLogout?: () => void): void {
   document.getElementById('workos-login-btn')?.addEventListener('click', onLogin);
-  document.getElementById('demo-login-btn')?.addEventListener('click', onLogin);
+
+  document.getElementById('continue-dashboard-btn')?.addEventListener('click', () => {
+    if (onContinue) onContinue();
+  });
+
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    if (onLogout) onLogout();
+  });
 }

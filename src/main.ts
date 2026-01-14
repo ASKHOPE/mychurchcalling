@@ -36,12 +36,20 @@ class App {
   }
 
   private renderLogin(container: HTMLDivElement): void {
-    container.innerHTML = renderLoginPage(this.authState.isLoading);
+    container.innerHTML = renderLoginPage(this.authState.isLoading, this.authState.isAuthenticated);
     container.className = 'app-container login-view';
 
-    attachLoginListeners(() => {
-      auth.login();
-    });
+    attachLoginListeners(
+      () => auth.login(),
+      () => this.showDashboard(),
+      () => auth.logout()
+    );
+  }
+
+  private showDashboard(): void {
+    this.currentPage = 'home';
+    const app = document.querySelector<HTMLDivElement>('#app')!;
+    this.renderApp(app);
   }
 
   private renderApp(container: HTMLDivElement): void {
