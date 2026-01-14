@@ -6,7 +6,7 @@ import { renderHomePage } from './pages/Home';
 import { renderUsersPage, attachUsersListeners } from './pages/Users';
 import { renderAlertsPage } from './pages/Alerts';
 import { renderMessagesPage } from './pages/Messages';
-import { renderSettingsPage } from './pages/Settings';
+import { renderConfigPage, attachConfigListeners } from './pages/Config';
 import { renderLogsPage, loadLogs } from './pages/Logs';
 import { renderBinPage, attachBinListeners, loadBin } from './pages/Bin';
 import { PageRoute, AuthState } from './types';
@@ -88,8 +88,9 @@ class App {
 
     attachMenuListeners((p) => this.navigateTo(p), () => auth.logout());
 
-    // Initialize listeners/loaders for specific pages
-    if (this.currentPage === 'users') attachUsersListeners();
+    // Page-specific initialization
+    if (this.currentPage === 'users') attachUsersListeners(() => this.navigateTo('settings'));
+    if (this.currentPage === 'settings') attachConfigListeners();
     if (this.currentPage === 'bin') { loadBin(); attachBinListeners(); }
     if (this.currentPage === 'logs') loadLogs();
   }
@@ -98,11 +99,11 @@ class App {
     switch (this.currentPage) {
       case 'home': return renderHomePage(this.authState.user);
       case 'users': return renderUsersPage([]);
+      case 'settings': return renderConfigPage();
       case 'bin': return renderBinPage([]);
       case 'logs': return renderLogsPage([]);
       case 'alerts': return renderAlertsPage();
       case 'messages': return renderMessagesPage();
-      case 'settings': return renderSettingsPage(this.authState.user);
       default: return renderHomePage(this.authState.user);
     }
   }

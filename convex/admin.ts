@@ -117,3 +117,89 @@ export const cleanupBin = mutation({
         return expired.length;
     },
 });
+
+/**
+ * Roles Management
+ */
+export const getRoles = query({
+    handler: async (ctx) => {
+        return await ctx.db.query("roles").collect();
+    }
+});
+
+export const addRole = mutation({
+    args: { name: v.string(), description: v.string(), permissions: v.array(v.string()) },
+    handler: async (ctx, args) => {
+        const id = await ctx.db.insert("roles", args);
+        await ctx.db.insert("auditLogs", {
+            action: "CREATE_ROLE",
+            actor: "Admin",
+            target: args.name,
+            description: `Created new system role: ${args.name}`,
+            timestamp: Date.now()
+        });
+        return id;
+    }
+});
+
+export const updateRole = mutation({
+    args: { id: v.id("roles"), name: v.string(), description: v.string(), permissions: v.array(v.string()) },
+    handler: async (ctx, args) => {
+        const { id, ...rest } = args;
+        await ctx.db.patch(id, rest);
+        await ctx.db.insert("auditLogs", {
+            action: "UPDATE_ROLE",
+            actor: "Admin",
+            target: args.name,
+            description: `Updated system role: ${args.name}`,
+            timestamp: Date.now()
+        });
+    }
+});
+
+/**
+ * Callings Management
+ */
+export const getCallings = query({
+    handler: async (ctx) => {
+        return await ctx.db.query("callings").collect();
+    }
+});
+
+export const addCalling = mutation({
+    args: { name: v.string(), category: v.string() },
+    handler: async (ctx, args) => {
+        const id = await ctx.db.insert("callings", args);
+        await ctx.db.insert("auditLogs", {
+            action: "CREATE_CALLING",
+            actor: "Admin",
+            target: args.name,
+            description: `Added new church calling: ${args.name}`,
+            timestamp: Date.now()
+        });
+        return id;
+    }
+});
+
+/**
+ * Seed initial data if empty
+ */
+export const seedConfig = mutation({
+    handler: async (ctx) => {
+        const roles = await ctx.db.query("roles").collect();
+        if (roles.length === 0) {
+            await ctx.db.insert("roles", { name: "admin", description: "Full system access", permissions: ["*"] });
+            await ctx.db.insert("roles", { name: "leader", description: "Ward/Stake leadership", permissions: ["manage_users", "view_logs"] });
+            await ctx.db.insert("roles", { name: "member", description: "General membership", permissions: ["view_directory"] });
+        }
+
+        const callings = await ctx.db.query("callings").collect();
+        if (callings.length === 0) {
+            const initial = ["Bishop", "Relief Society President", "Elders Quorum President", "Ward Clerk", "Member"];
+            for (const name of initial) {
+                await ctx.db.insert("callings", { name, category: "General" });
+            }
+        }
+    }
+});
+

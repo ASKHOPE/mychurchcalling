@@ -1,15 +1,19 @@
 import { UserListItem, UserRole, UserCalling } from '../types';
 import { fetchUsers, inviteUser, updateUserDetails, moveToBin } from '../api/users';
+import { fetchRoles, fetchCallings } from '../api/config';
 import { renderRoleTag, renderCallingTag } from '../components/Tags';
 import { UI } from '../utils/core';
 
 let currentUsers: UserListItem[] = [];
+let availableRoles: any[] = [];
+let availableCallings: any[] = [];
 let showArchived = false;
 
 export function renderUsersPage(users: UserListItem[] = []): string {
   currentUsers = users;
   const headerActions = `
     <div class="header-actions">
+      <button class="btn-secondary" id="manage-roles-btn">🛠️ Roles</button>
       <button class="btn-secondary" id="toggle-archived">
         ${showArchived ? '📁 View Active' : '📦 View Archived'}
       </button>
@@ -24,13 +28,8 @@ export function renderUsersPage(users: UserListItem[] = []): string {
       <div class="card users-table-card">
         <div class="table-header">
           <input type="text" class="input-glass search-input" placeholder="Search users..." id="user-search" />
-          <div class="filter-group">
-            ${renderFilter('role-filter', [
-    { value: '', label: 'All Roles' },
-    { value: 'admin', label: 'Admin' },
-    { value: 'leader', label: 'Leader' },
-    { value: 'member', label: 'Member' }
-  ])}
+          <div class="filter-group" id="dynamic-filters">
+             <!-- Dynamic filters will be injected here -->
           </div>
         </div>
 
@@ -79,15 +78,13 @@ export function renderUsersPage(users: UserListItem[] = []): string {
             <div class="form-group">
               <label for="edit-role">System Role</label>
               <select id="edit-role" class="input-glass select-input">
-                <option value="admin">Admin</option>
-                <option value="leader">Leader</option>
-                <option value="member">Member</option>
+                <!-- Populated dynamically -->
               </select>
             </div>
             <div class="form-group">
               <label for="edit-calling">Church Calling</label>
               <select id="edit-calling" class="input-glass select-input">
-                ${getCallingOptions().map(c => `<option value="${c}">${c}</option>`).join('')}
+                <!-- Populated dynamically -->
               </select>
             </div>
             <div class="form-actions">
@@ -105,10 +102,6 @@ function renderUserRows(users: UserListItem[]): string {
   const filtered = users.filter(u => !!u.isArchived === showArchived);
   if (filtered.length === 0) return '<tr><td colspan="5" class="empty-cell">No users found.</td></tr>';
   return filtered.map(renderUserRow).join('');
-}
-
-function renderFilter(id: string, options: { value: string, label: string }[]): string {
-  return `<select class="input-glass select-input" id="${id}">${options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('')}</select>`;
 }
 
 function renderUserRow(user: UserListItem): string {
@@ -135,16 +128,41 @@ function renderUserRow(user: UserListItem): string {
 }
 
 export async function loadUsers(): Promise<void> {
-  const users = await fetchUsers();
+  const [users, roles, callings] = await Promise.all([
+    fetchUsers(),
+    fetchRoles(),
+    fetchCallings()
+  ]);
+
   currentUsers = users;
+  availableRoles = roles;
+  availableCallings = callings;
+
   const tbody = document.getElementById('users-table-body');
   if (tbody) tbody.innerHTML = renderUserRows(users);
+
+  updateDropdowns();
 }
 
-export function attachUsersListeners(): void {
+function updateDropdowns() {
+  const roleSelect = document.getElementById('edit-role');
+  const callingSelect = document.getElementById('edit-calling');
+
+  if (roleSelect) {
+    roleSelect.innerHTML = availableRoles.map(r => `<option value="${r.name}">${UI.escape(r.name)}</option>`).join('');
+  }
+  if (callingSelect) {
+    callingSelect.innerHTML = availableCallings.map(c => `<option value="${c.name}">${UI.escape(c.name)}</option>`).join('');
+  }
+}
+
+export function attachUsersListeners(onManageRoles?: () => void): void {
   const tbody = document.getElementById('users-table-body');
 
-  // Navigation Toggles
+  document.getElementById('manage-roles-btn')?.addEventListener('click', () => {
+    if (onManageRoles) onManageRoles();
+  });
+
   document.getElementById('toggle-archived')?.addEventListener('click', (e) => {
     showArchived = !showArchived;
     const btn = e.currentTarget as HTMLButtonElement;
@@ -152,7 +170,6 @@ export function attachUsersListeners(): void {
     loadUsers();
   });
 
-  // Table Actions
   tbody?.addEventListener('click', async (e) => {
     const target = e.target as HTMLElement;
     const btn = target.closest('.icon-btn') as HTMLElement;
@@ -173,7 +190,6 @@ export function attachUsersListeners(): void {
     }
   });
 
-  // Modal Handlers
   document.getElementById('invite-user-btn')?.addEventListener('click', () => {
     document.getElementById('invite-modal')!.style.display = 'flex';
   });
@@ -221,14 +237,4 @@ function handleOpenEditModal(userId: string) {
     <div><strong>${UI.escape(user.name)}</strong><br/><small>${UI.escape(user.email)}</small></div>
   `;
   document.getElementById('edit-modal')!.style.display = 'flex';
-}
-
-function getCallingOptions(): UserCalling[] {
-  return [
-    'Bishop', '1st Counselor', '2nd Counselor', 'Ward Clerk', 'Ward Executive Secretary',
-    'Relief Society President', 'RS 1st Counselor', 'RS 2nd Counselor', 'Relief Society Secretary',
-    'Elders Quorum President', 'EQ 1st Counselor', 'EQ 2nd Counselor', 'Elders Quorum Secretary',
-    'Young Women President', 'YW 1st Counselor', 'YW 2nd Counselor', 'Young Women Secretary',
-    'Sunday School President', 'SS 1st Counselor', 'SS 2nd Counselor', 'Member'
-  ];
 }

@@ -3,7 +3,8 @@ import {
     login, callback, signOut, home, refresh,
     listUsers, inviteUser, updateUser,
     softDeleteUser, permanentDeleteUser, restoreUser,
-    listEvents, listBin
+    listEvents, listBin,
+    listRoles, listCallings, createRole, createCalling
 } from "./workos";
 
 const http = httpRouter();
@@ -23,18 +24,22 @@ http.route({ path: "/users/update", method: "POST", handler: updateUser });
 http.route({ path: "/users/update", method: "OPTIONS", handler: updateUser });
 
 // Bin & Archive & CRUD Extended
-http.route({ path: "/users/delete", method: "POST", handler: softDeleteUser }); // Now soft delete
+http.route({ path: "/users/delete", method: "POST", handler: softDeleteUser });
 http.route({ path: "/users/delete", method: "OPTIONS", handler: softDeleteUser });
-
 http.route({ path: "/users/permanent-delete", method: "POST", handler: permanentDeleteUser });
 http.route({ path: "/users/permanent-delete", method: "OPTIONS", handler: permanentDeleteUser });
-
 http.route({ path: "/users/restore", method: "POST", handler: restoreUser });
 http.route({ path: "/users/restore", method: "OPTIONS", handler: restoreUser });
 
-// Admin / Audit
+// Admin / Audit / Config
 http.route({ path: "/admin/events", method: "GET", handler: listEvents });
 http.route({ path: "/admin/bin", method: "GET", handler: listBin });
+http.route({ path: "/admin/roles", method: "GET", handler: listRoles });
+http.route({ path: "/admin/roles", method: "POST", handler: createRole });
+http.route({ path: "/admin/roles", method: "OPTIONS", handler: createRole });
+http.route({ path: "/admin/callings", method: "GET", handler: listCallings });
+http.route({ path: "/admin/callings", method: "POST", handler: createCalling });
+http.route({ path: "/admin/callings", method: "OPTIONS", handler: createCalling });
 
 // Default
 http.route({ path: "/", method: "GET", handler: home });

@@ -17,6 +17,19 @@ export default defineSchema({
         userId: v.optional(v.id("users")),
     }).index("by_user", ["userId"]),
 
+    // Dynamic Application Roles/Permissions
+    roles: defineTable({
+        name: v.string(), // e.g. "admin", "leader"
+        description: v.string(),
+        permissions: v.array(v.string()), // e.g. ["manage_users", "view_logs"]
+    }).index("by_name", ["name"]),
+
+    // Church Callings (Ministries)
+    callings: defineTable({
+        name: v.string(), // e.g. "Bishop"
+        category: v.string(), // e.g. "Priesthood", "Relief Society"
+    }).index("by_name", ["name"]),
+
     // For soft-deleted items (Users, etc.)
     recycleBin: defineTable({
         type: v.string(), // "user"

@@ -224,3 +224,45 @@ export const inviteUser = httpAction(async (ctx, request) => {
 export const home = httpAction(async () => {
   return new Response(`⛪ MyChurchCalling AuthKit`, { headers: { "Content-Type": "text/plain" } });
 });
+
+/**
+ * List dynamic roles
+ */
+export const listRoles = httpAction(async (ctx) => {
+    const roles = await ctx.runQuery(api.admin.getRoles);
+    return new Response(JSON.stringify({ roles }), { 
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
+    });
+});
+
+/**
+ * List dynamic callings
+ */
+export const listCallings = httpAction(async (ctx) => {
+    const callings = await ctx.runQuery(api.admin.getCallings);
+    return new Response(JSON.stringify({ callings }), { 
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
+    });
+});
+
+/**
+ * Add new role
+ */
+export const createRole = httpAction(async (ctx, request) => {
+    const { name, description, permissions } = await request.json();
+    const roleId = await ctx.runMutation(api.admin.addRole, { name, description, permissions });
+    return new Response(JSON.stringify({ success: true, roleId }), { 
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
+    });
+});
+
+/**
+ * Add new calling
+ */
+export const createCalling = httpAction(async (ctx, request) => {
+    const { name, category } = await request.json();
+    const callingId = await ctx.runMutation(api.admin.addCalling, { name, category });
+    return new Response(JSON.stringify({ success: true, callingId }), { 
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
+    });
+});
