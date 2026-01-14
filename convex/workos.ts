@@ -8,6 +8,9 @@ const workos = new WorkOS(process.env.WORKOS_API_KEY, {
 
 const clientId = process.env.WORKOS_CLIENT_ID!;
 
+// App URL - use environment variable or default to Netlify
+const APP_URL = process.env.APP_URL || "https://mychurchcalling.netlify.app";
+
 /**
  * Login endpoint - redirects to WorkOS AuthKit.
  */
@@ -27,7 +30,7 @@ export const login = httpAction(async () => {
 });
 
 /**
- * Callback endpoint - exchanges code for tokens and redirects to localhost with session.
+ * Callback endpoint - exchanges code for tokens and redirects to app with session.
  */
 export const callback = httpAction(async (ctx, request) => {
   const url = new URL(request.url);
@@ -35,7 +38,7 @@ export const callback = httpAction(async (ctx, request) => {
   const error = url.searchParams.get("error");
 
   if (error) {
-    const errorRedirect = new URL("http://localhost:1420/");
+    const errorRedirect = new URL(APP_URL);
     errorRedirect.searchParams.set("auth_error", error);
     return new Response(null, {
       status: 302,
@@ -76,8 +79,8 @@ export const callback = httpAction(async (ctx, request) => {
     const encodedSession = Buffer.from(JSON.stringify(sessionData)).toString('base64url');
     const encodedRefreshToken = Buffer.from(refreshToken).toString('base64url');
 
-    // Redirect to localhost with session data
-    const redirectUrl = new URL("http://localhost:1420/");
+    // Redirect to app with session data
+    const redirectUrl = new URL(APP_URL);
     redirectUrl.searchParams.set("session", encodedSession);
     redirectUrl.searchParams.set("refresh", encodedRefreshToken);
 
@@ -89,7 +92,7 @@ export const callback = httpAction(async (ctx, request) => {
     });
   } catch (error) {
     console.error("WorkOS auth error:", error);
-    const errorRedirect = new URL("http://localhost:1420/");
+    const errorRedirect = new URL(APP_URL);
     errorRedirect.searchParams.set("auth_error", "Authentication failed");
     return new Response(null, {
       status: 302,
@@ -100,11 +103,9 @@ export const callback = httpAction(async (ctx, request) => {
 
 /**
  * Sign-out endpoint - clears session and redirects.
- * Configure this as "Sign-out redirect" in WorkOS Dashboard.
  */
 export const signOut = httpAction(async () => {
-  // Redirect to localhost to clear the session
-  const redirectUrl = new URL("http://localhost:1420/");
+  const redirectUrl = new URL(APP_URL);
   redirectUrl.searchParams.set("signout", "true");
 
   return new Response(null, {
@@ -121,7 +122,7 @@ export const home = httpAction(async () => {
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Antigravity Auth</title>
+        <title>MyChurchCalling Auth</title>
         <style>
           body { font-family: sans-serif; background: #0f172a; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
           .container { text-align: center; padding: 2rem; }
@@ -131,7 +132,7 @@ export const home = httpAction(async () => {
       </head>
       <body>
         <div class="container">
-          <h1>⚡ Antigravity</h1>
+          <h1>⛪ MyChurchCalling</h1>
           <p>Authentication powered by WorkOS</p>
           <br/>
           <a href="/login" class="btn">Sign In with WorkOS</a>
