@@ -1,13 +1,13 @@
 export function renderLoginPage(isLoading: boolean): string {
-    return `
+  return `
     <div class="login-page">
       <div class="login-container glass-container">
         <div class="login-header">
           <div class="logo-large">
-            <span class="logo-icon-lg">⚡</span>
+            <span class="logo-icon-lg">⛪</span>
           </div>
-          <h1>Welcome to Antigravity</h1>
-          <p>Sign in to access your workspace</p>
+          <h1>MyChurchCalling</h1>
+          <p>Sign in to manage your church callings</p>
         </div>
 
         <div class="login-content">
@@ -33,7 +33,7 @@ export function renderLoginPage(isLoading: boolean): string {
 }
 
 function renderLoginButton(): string {
-    return `
+  return `
     <button id="workos-login-btn" class="btn-primary btn-large">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -52,7 +52,7 @@ function renderLoginButton(): string {
 }
 
 function renderLoadingState(): string {
-    return `
+  return `
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Authenticating with WorkOS...</p>
@@ -61,6 +61,6 @@ function renderLoadingState(): string {
 }
 
 export function attachLoginListeners(onLogin: () => void): void {
-    document.getElementById('workos-login-btn')?.addEventListener('click', onLogin);
-    document.getElementById('demo-login-btn')?.addEventListener('click', onLogin);
+  document.getElementById('workos-login-btn')?.addEventListener('click', onLogin);
+  document.getElementById('demo-login-btn')?.addEventListener('click', onLogin);
 }

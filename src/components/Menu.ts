@@ -1,35 +1,35 @@
 import { NavItem, PageRoute, User } from '../types';
 
 const navItems: NavItem[] = [
-    { id: 'home', label: 'Dashboard', icon: '🏠' },
-    { id: 'users', label: 'User Management', icon: '👥' },
-    { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+  { id: 'home', label: 'Dashboard', icon: '🏠' },
+  { id: 'users', label: 'User Management', icon: '👥' },
+  { id: 'messages', label: 'Messages', icon: '💬' },
+  { id: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export function renderMenu(
-    user: User | null,
-    currentPage: PageRoute,
-    onNavigate: (page: PageRoute) => void,
-    onLogout: () => void
+  user: User | null,
+  currentPage: PageRoute,
+  onNavigate: (page: PageRoute) => void,
+  onLogout: () => void
 ): string {
-    const userAvatar = user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
-    const userName = user?.name || 'Guest';
-    const userEmail = user?.email || '';
+  const userAvatar = user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
+  const userName = user?.name || 'Guest';
+  const userEmail = user?.email || '';
 
-    return `
+  return `
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo">
-          <span class="logo-icon">⚡</span>
-          <span class="logo-text">Antigravity</span>
+          <span class="logo-icon">⛪</span>
+          <span class="logo-text">MyChurchCalling</span>
         </div>
       </div>
 
       <nav class="sidebar-nav">
         ${navItems
-            .map(
-                (item) => `
+      .map(
+        (item) => `
           <button 
             class="nav-item ${currentPage === item.id ? 'active' : ''}" 
             data-page="${item.id}"
@@ -38,8 +38,8 @@ export function renderMenu(
             <span class="nav-label">${item.label}</span>
           </button>
         `
-            )
-            .join('')}
+      )
+      .join('')}
       </nav>
 
       <div class="sidebar-footer">
@@ -59,15 +59,15 @@ export function renderMenu(
 }
 
 export function attachMenuListeners(
-    onNavigate: (page: PageRoute) => void,
-    onLogout: () => void
+  onNavigate: (page: PageRoute) => void,
+  onLogout: () => void
 ): void {
-    document.querySelectorAll('.nav-item').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const page = btn.getAttribute('data-page') as PageRoute;
-            onNavigate(page);
-        });
+  document.querySelectorAll('.nav-item').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const page = btn.getAttribute('data-page') as PageRoute;
+      onNavigate(page);
     });
+  });
 
-    document.getElementById('logout-btn')?.addEventListener('click', onLogout);
+  document.getElementById('logout-btn')?.addEventListener('click', onLogout);
 }

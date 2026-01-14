@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
+  "productName": "MyChurchCalling",
   "version": "0.1.0",
-  "identifier": "com.tauri.antigravity",
+  "identifier": "com.mychurchcalling.app",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -13,9 +13,9 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "tauri-app",
-        "width": 800,
-        "height": 600
+        "title": "MyChurchCalling",
+        "width": 1200,
+        "height": 800
       }
     ],
     "security": {
