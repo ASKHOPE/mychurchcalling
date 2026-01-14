@@ -3,6 +3,8 @@ import { NavItem, PageRoute, User } from '../types';
 const navItems: NavItem[] = [
   { id: 'home', label: 'Dashboard', icon: '🏠' },
   { id: 'users', label: 'User Management', icon: '👥' },
+  { id: 'logs', label: 'Change Log', icon: '📜' },
+  { id: 'bin', label: 'Recycle Bin', icon: '♻️' },
   { id: 'alerts', label: 'System Alerts', icon: '🔔' },
   { id: 'messages', label: 'Messages', icon: '💬' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
@@ -22,7 +24,7 @@ export function renderMenu(
   // Filter items based on role
   const filteredItems = navItems.filter(item => {
     if (role === 'admin') return true;
-    if (role === 'leader') return ['home', 'users', 'messages', 'settings'].includes(item.id);
+    if (role === 'leader') return ['home', 'users', 'logs', 'bin', 'messages', 'settings'].includes(item.id);
     if (role === 'member') return ['home', 'messages', 'settings'].includes(item.id);
     return ['home'].includes(item.id); // Guests/others
   });
@@ -32,7 +34,7 @@ export function renderMenu(
       <div class="sidebar-header">
         <div class="logo">
           <span class="logo-icon">⛪</span>
-          <span class="logo-text">MyChurchCalling</span>
+          <span class="logo-text">MyCC</span>
         </div>
       </div>
 
