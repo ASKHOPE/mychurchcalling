@@ -10,8 +10,8 @@ const navItems: NavItem[] = [
 export function renderMenu(
   user: User | null,
   currentPage: PageRoute,
-  onNavigate: (page: PageRoute) => void,
-  onLogout: () => void
+  _onNavigate: (page: PageRoute) => void,
+  _onLogout: () => void
 ): string {
   const userAvatar = user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
   const userName = user?.name || 'Guest';

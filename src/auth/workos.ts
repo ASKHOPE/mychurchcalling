@@ -1,4 +1,4 @@
-import { AuthState, User } from '../types';
+import { AuthState } from '../types';
 
 // Convex HTTP endpoint base URL
 const CONVEX_SITE_URL = 'https://agile-eagle-782.convex.site';

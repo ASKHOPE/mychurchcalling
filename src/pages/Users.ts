@@ -1,11 +1,7 @@
 import { UserListItem } from '../types';
 import { fetchUsers, inviteUser } from '../api/users';
 
-// Cache for users
-let usersCache: UserListItem[] = [];
-
 export function renderUsersPage(users: UserListItem[] = []): string {
-  usersCache = users;
 
   return `
     <div class="page users-page">
@@ -126,7 +122,6 @@ function renderUserRow(user: UserListItem): string {
 
 export async function loadUsers(): Promise<UserListItem[]> {
   const users = await fetchUsers();
-  usersCache = users;
 
   // Update the table body
   const tbody = document.getElementById('users-table-body');
