@@ -3,6 +3,7 @@ import { NavItem, PageRoute, User } from '../types';
 const navItems: NavItem[] = [
   { id: 'home', label: 'Dashboard', icon: '🏠' },
   { id: 'users', label: 'User Management', icon: '👥' },
+  { id: 'alerts', label: 'System Alerts', icon: '🔔' },
   { id: 'messages', label: 'Messages', icon: '💬' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ];
@@ -13,9 +14,18 @@ export function renderMenu(
   _onNavigate: (page: PageRoute) => void,
   _onLogout: () => void
 ): string {
-  const userAvatar = user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
+  const userAvatar = user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user?.name;
   const userName = user?.name || 'Guest';
   const userEmail = user?.email || '';
+  const role = user?.role || 'member';
+
+  // Filter items based on role
+  const filteredItems = navItems.filter(item => {
+    if (role === 'admin') return true;
+    if (role === 'leader') return ['home', 'users', 'messages', 'settings'].includes(item.id);
+    if (role === 'member') return ['home', 'messages', 'settings'].includes(item.id);
+    return ['home'].includes(item.id); // Guests/others
+  });
 
   return `
     <aside class="sidebar">
@@ -27,7 +37,7 @@ export function renderMenu(
       </div>
 
       <nav class="sidebar-nav">
-        ${navItems
+        ${filteredItems
       .map(
         (item) => `
           <button 

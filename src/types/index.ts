@@ -6,7 +6,7 @@ export interface User {
     email: string;
     picture?: string;
     tokenIdentifier: string;
-    role: 'admin' | 'member' | 'viewer';
+    role: 'admin' | 'member' | 'leader' | 'viewer';
     lastLoginAt?: number;
 }
 
@@ -26,7 +26,7 @@ export interface AuthState {
 }
 
 // Navigation
-export type PageRoute = 'home' | 'users' | 'messages' | 'settings';
+export type PageRoute = 'home' | 'users' | 'messages' | 'settings' | 'alerts';
 
 export interface NavItem {
     id: PageRoute;

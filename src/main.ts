@@ -30,6 +30,10 @@ class App {
 
   private render(): void {
     const app = document.querySelector<HTMLDivElement>('#app')!;
+    const role = this.authState.user?.role || 'guest';
+
+    // Set role attribute for CSS targeting
+    app.setAttribute('data-user-role', role);
 
     if (!this.authState.isAuthenticated) {
       this.renderLogin(app);
@@ -67,7 +71,6 @@ class App {
 
   private handleSendOtp(phone: string): void {
     this.currentPhone = phone;
-    // In a real app, you'd call an API to send OTP here
     console.log('📱 Sending OTP to:', phone);
     alert(`Demo Mode: OTP sent to ${phone}\n\nEnter any 6-digit code to continue.`);
     this.otpStep = 'verify';
@@ -75,11 +78,7 @@ class App {
   }
 
   private handleVerifyOtp(code: string): void {
-    console.log('🔐 Verifying OTP:', code);
-
-    // Demo mode: accept any 6-digit code
     if (code.length === 6) {
-      // Create a guest user session
       const guestUser = {
         _id: `guest_${Date.now()}`,
         _creationTime: Date.now(),
@@ -87,11 +86,10 @@ class App {
         email: this.currentPhone,
         picture: null,
         tokenIdentifier: `otp|${this.currentPhone}`,
-        role: 'guest' as const,
+        role: 'member' as const, // Default role for guest OTP
         lastLoginAt: Date.now(),
       };
 
-      // Store session
       const sessionData = {
         isAuthenticated: true,
         isLoading: false,
@@ -100,12 +98,8 @@ class App {
       };
 
       localStorage.setItem('auth_session', JSON.stringify(sessionData));
-
-      // Reset OTP form state
       this.showOtpForm = false;
       this.otpStep = 'phone';
-
-      // Restore session to update auth state
       auth.restoreSession();
     } else {
       alert('Please enter a valid 6-digit code.');
@@ -153,7 +147,6 @@ class App {
       () => auth.logout()
     );
 
-    // Attach page-specific listeners
     if (this.currentPage === 'users') {
       attachUsersListeners();
     }
@@ -165,6 +158,8 @@ class App {
         return renderHomePage(this.authState.user);
       case 'users':
         return renderUsersPage([]);
+      case 'alerts':
+        return this.renderAlertsPage();
       case 'messages':
         return this.renderMessagesPage();
       case 'settings':
@@ -172,6 +167,37 @@ class App {
       default:
         return renderHomePage(this.authState.user);
     }
+  }
+
+  private renderAlertsPage(): string {
+    return `
+      <div class="page alerts-page">
+        <header class="page-header">
+          <div>
+            <h1>System Alerts</h1>
+            <p class="subtitle">Real-time notifications and system status.</p>
+          </div>
+        </header>
+        <div class="card premium-card">
+           <div class="activity-list">
+             <li class="activity-item">
+                <span class="activity-icon">⚠️</span>
+                <div class="activity-content">
+                  <span class="activity-text"><strong>High Priority:</strong> 3 callings are overdue for renewal</span>
+                  <span class="activity-time">Now</span>
+                </div>
+             </li>
+             <li class="activity-item">
+                <span class="activity-icon">ℹ️</span>
+                <div class="activity-content">
+                  <span class="activity-text">Weekly backup completed successfully</span>
+                  <span class="activity-time">2 hours ago</span>
+                </div>
+             </li>
+           </div>
+        </div>
+      </div>
+    `;
   }
 
   private renderMessagesPage(): string {
@@ -206,10 +232,10 @@ class App {
           </div>
         </header>
         <div class="settings-grid">
-          <div class="card">
+          <div class="card premium-card">
             <h3>Profile</h3>
             <div class="profile-section">
-              <img src="${user?.picture || ''}" alt="${user?.name}" class="profile-avatar" />
+              <img src="${user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user?.name}" alt="${user?.name}" class="profile-avatar" />
               <div class="profile-info">
                 <span class="profile-name">${user?.name}</span>
                 <span class="profile-email">${user?.email}</span>
@@ -217,7 +243,18 @@ class App {
               </div>
             </div>
           </div>
-          <div class="card">
+          <div class="card premium-card admin-only">
+            <h3>Unit Configuration</h3>
+            <p class="subtitle">Exclusive admin tools for unit management.</p>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Organization Name</span>
+                <span class="setting-desc">Change the display name for this unit</span>
+              </div>
+              <button class="btn-secondary">Edit</button>
+            </div>
+          </div>
+          <div class="card premium-card">
             <h3>Security</h3>
             <div class="setting-row">
               <div class="setting-info">
@@ -225,13 +262,6 @@ class App {
                 <span class="setting-desc">Add an extra layer of security</span>
               </div>
               <button class="btn-secondary">Enable</button>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info">
-                <span class="setting-label">Active Sessions</span>
-                <span class="setting-desc">Manage devices where you're logged in</span>
-              </div>
-              <button class="btn-secondary">View</button>
             </div>
           </div>
         </div>
@@ -245,6 +275,5 @@ class App {
   }
 }
 
-// Initialize the app
 const app = new App();
 app.init();

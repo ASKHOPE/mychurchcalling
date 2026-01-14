@@ -92,6 +92,7 @@ function renderUserRow(user: UserListItem): string {
 
   const roleClass = {
     admin: 'role-admin',
+    leader: 'role-leader',
     member: 'role-member',
     viewer: 'role-viewer',
   }[user.role];
