@@ -1,5 +1,5 @@
 import { httpRouter } from "convex/server";
-import { login, callback, signOut, home, refresh, listUsers, inviteUser } from "./workos";
+import { login, callback, signOut, home, refresh, listUsers, inviteUser, updateUser, deleteUser } from "./workos";
 
 const http = httpRouter();
 
@@ -23,7 +23,7 @@ http.route({
     handler: callback,
 });
 
-// Sign-out redirect (configure this in WorkOS Dashboard)
+// Sign-out redirect
 http.route({
     path: "/sign-out",
     method: "GET",
@@ -59,6 +59,30 @@ http.route({
     path: "/users/invite",
     method: "OPTIONS",
     handler: inviteUser,
+});
+
+http.route({
+    path: "/users/update",
+    method: "POST",
+    handler: updateUser,
+});
+
+http.route({
+    path: "/users/update",
+    method: "OPTIONS",
+    handler: updateUser,
+});
+
+http.route({
+    path: "/users/delete",
+    method: "POST",
+    handler: deleteUser,
+});
+
+http.route({
+    path: "/users/delete",
+    method: "OPTIONS",
+    handler: deleteUser,
 });
 
 export default http;

@@ -69,7 +69,8 @@ export const callback = httpAction(async (ctx, request) => {
         email: user.email,
         picture: user.profilePictureUrl || null,
         tokenIdentifier: `workos|${user.id}`,
-        role: "member",
+        role: (user.metadata?.role as any) || "member",
+        calling: (user.metadata?.calling as any) || "Member",
         lastLoginAt: Date.now(),
       },
       accessToken: accessToken,
@@ -218,6 +219,8 @@ export const listUsers = httpAction(async () => {
           emailVerified: u.emailVerified,
           createdAt: u.createdAt,
           updatedAt: u.updatedAt,
+          role: u.metadata?.role || 'member',
+          calling: u.metadata?.calling || 'Member',
         })),
       }),
       {
@@ -274,6 +277,69 @@ export const inviteUser = httpAction(async (ctx, request) => {
   } catch (error) {
     console.error("Failed to invite user:", error);
     return new Response(JSON.stringify({ error: "Failed to send invitation" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+  }
+});
+
+/**
+ * Update user metadata (Role & Calling)
+ */
+export const updateUser = httpAction(async (ctx, request) => {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+
+  try {
+    const { userId, role, calling } = await request.json();
+    const userResult = await workos.userManagement.updateUser({
+      userId,
+      metadata: { role, calling }
+    });
+
+    return new Response(JSON.stringify({ success: true, user: userResult }), {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+  } catch (error) {
+    console.error("Failed to update user:", error);
+    return new Response(JSON.stringify({ error: "Failed to update user" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+  }
+});
+
+/**
+ * Delete user from WorkOS
+ */
+export const deleteUser = httpAction(async (ctx, request) => {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "DELETE, OPTIONS, POST",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+
+  try {
+    const { userId } = await request.json();
+    await workos.userManagement.deleteUser(userId);
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+  } catch (error) {
+    console.error("Failed to delete user:", error);
+    return new Response(JSON.stringify({ error: "Failed to delete user" }), {
       status: 500,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });

@@ -1,4 +1,4 @@
-import { UserListItem, UserCalling } from '../types';
+import { UserListItem, UserRole, UserCalling } from '../types';
 import { auth } from '../auth/workos';
 
 interface WorkOSUser {
@@ -8,6 +8,8 @@ interface WorkOSUser {
     lastName: string | null;
     profilePictureUrl: string | null;
     emailVerified: boolean;
+    role: UserRole;
+    calling: UserCalling;
     createdAt: string;
     updatedAt: string;
 }
@@ -37,18 +39,92 @@ export async function fetchUsers(): Promise<UserListItem[]> {
             id: user.id,
             name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
             email: user.email,
-            role: 'member',
+            role: user.role || 'member',
+            calling: user.calling || 'Member',
             status: user.emailVerified ? 'active' : 'pending',
             lastActive: formatDate(user.updatedAt),
         }));
     } catch (error) {
         console.error('Failed to fetch users:', error);
-        return getMockUsers(); // Fallback for demo
+        return getMockUsers();
+    }
+}
+
+/**
+ * Invites a new user via WorkOS.
+ */
+export async function inviteUser(email: string): Promise<{ success: boolean; message: string }> {
+    const siteUrl = auth.getSiteUrl();
+
+    try {
+        const response = await fetch(`${siteUrl}/users/invite`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to send invitation');
+        }
+
+        const invitation = await response.json();
+        return { success: true, message: `Invitation sent to ${invitation.email}` };
+    } catch (error) {
+        return { success: false, message: error instanceof Error ? error.message : 'Failed to send invitation' };
+    }
+}
+
+/**
+ * Updates a user's role and calling.
+ */
+export async function updateUserDetails(userId: string, role: UserRole, calling: UserCalling): Promise<{ success: boolean; message: string }> {
+    const siteUrl = auth.getSiteUrl();
+
+    try {
+        const response = await fetch(`${siteUrl}/users/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, role, calling }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update user');
+        }
+
+        return { success: true, message: 'User updated successfully' };
+    } catch (error) {
+        return { success: false, message: error instanceof Error ? error.message : 'Failed to update user' };
+    }
+}
+
+/**
+ * Deletes a user.
+ */
+export async function removeUser(userId: string): Promise<{ success: boolean; message: string }> {
+    const siteUrl = auth.getSiteUrl();
+
+    try {
+        const response = await fetch(`${siteUrl}/users/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to remove user');
+        }
+
+        return { success: true, message: 'User removed successfully' };
+    } catch (error) {
+        return { success: false, message: error instanceof Error ? error.message : 'Failed to remove user' };
     }
 }
 
 function getMockUsers(): UserListItem[] {
-    const mockData: { name: string; email: string; calling: UserCalling; role: any }[] = [
+    const mockData: { name: string; email: string; calling: UserCalling; role: UserRole }[] = [
         { name: 'John Peterson', email: 'bishop@ward.org', calling: 'Bishop', role: 'leader' },
         { name: 'Sarah Miller', email: 'rs.president@ward.org', calling: 'Relief Society President', role: 'leader' },
         { name: 'Mike Johnson', email: 'eq.president@ward.org', calling: 'Elders Quorum President', role: 'leader' },
@@ -68,40 +144,6 @@ function getMockUsers(): UserListItem[] {
         status: i % 3 === 0 ? 'active' : 'pending',
         lastActive: '2 days ago'
     }));
-}
-
-/**
- * Invites a new user via WorkOS.
- */
-export async function inviteUser(email: string): Promise<{ success: boolean; message: string }> {
-    const siteUrl = auth.getSiteUrl();
-
-    try {
-        const response = await fetch(`${siteUrl}/users/invite`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email }),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to send invitation');
-        }
-
-        const invitation = await response.json();
-        return {
-            success: true,
-            message: `Invitation sent to ${invitation.email}`,
-        };
-    } catch (error) {
-        console.error('Failed to invite user:', error);
-        return {
-            success: false,
-            message: error instanceof Error ? error.message : 'Failed to send invitation',
-        };
-    }
 }
 
 function formatDate(dateString: string): string {
