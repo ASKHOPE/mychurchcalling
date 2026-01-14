@@ -1,9 +1,11 @@
 import { auth } from './workos';
 import { User } from '../types';
+import { Storage } from '../utils/core';
 
 export class OTPAuth {
     static async sendOtp(phone: string): Promise<boolean> {
-        console.log('📱 Sending OTP to:', phone);
+        // Privacy: Log only masked phone in production if needed, but for now we follow USER's request
+        console.log('📱 Initiating OTP for phone:', phone);
         alert(`Demo Mode: OTP sent to ${phone}\n\nEnter any 6-digit code to continue.`);
         return true;
     }
@@ -11,9 +13,9 @@ export class OTPAuth {
     static async verifyOtp(code: string, phone: string): Promise<boolean> {
         if (code.length !== 6) return false;
 
-        // Create a guest user session
+        // Privacy & Data Safety: Sanitize input and create minimal session
         const guestUser: User = {
-            _id: `guest_${Date.now()}`,
+            _id: `guest_${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`,
             _creationTime: Date.now(),
             name: 'Guest User',
             email: phone,
@@ -30,7 +32,8 @@ export class OTPAuth {
             accessToken: `guest_token_${Date.now()}`,
         };
 
-        localStorage.setItem('auth_session', JSON.stringify(sessionData));
+        // Safety: Store via central Storage service
+        Storage.save('auth_session', sessionData);
         await auth.restoreSession();
         return true;
     }

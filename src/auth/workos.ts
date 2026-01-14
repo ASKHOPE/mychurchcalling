@@ -1,4 +1,5 @@
 import { AuthState } from '../types';
+import { Storage } from '../utils/core';
 
 // Convex HTTP endpoint base URL
 const CONVEX_SITE_URL = 'https://agile-eagle-782.convex.site';
@@ -48,54 +49,34 @@ class WorkOSAuth {
         const encodedRefresh = urlParams.get('refresh');
         const authError = urlParams.get('auth_error');
 
-        console.log('🔍 Checking URL for session. Params:', {
-            hasSession: !!encodedSession,
-            hasRefresh: !!encodedRefresh,
-            authError
-        });
-
         // Handle sign-out redirect from WorkOS
         const signout = urlParams.get('signout');
         if (signout) {
-            console.log('👋 Sign-out detected, clearing session');
-            localStorage.removeItem('auth_session');
-            localStorage.removeItem('refresh_token');
-            window.history.replaceState({}, document.title, window.location.pathname);
+            this.logout();
+            this.cleanUrl();
             return false;
         }
 
         if (authError) {
             console.error('Auth error:', authError);
-            window.history.replaceState({}, document.title, window.location.pathname);
+            this.cleanUrl();
             return false;
         }
 
         if (encodedSession) {
             try {
-                // Decode URL-safe base64 (convert back to standard base64 first)
-                const standardBase64 = encodedSession
-                    .replace(/-/g, '+')
-                    .replace(/_/g, '/');
-                const sessionJson = atob(standardBase64);
-                const sessionData = JSON.parse(sessionJson);
-
+                const sessionData = this.decodeBase64Url(encodedSession);
                 console.log('✅ Decoded session data:', sessionData);
 
                 this.setState(sessionData);
-                localStorage.setItem('auth_session', JSON.stringify(sessionData));
+                Storage.save('auth_session', sessionData);
 
                 if (encodedRefresh) {
-                    const standardRefresh = encodedRefresh
-                        .replace(/-/g, '+')
-                        .replace(/_/g, '/');
-                    const refreshToken = atob(standardRefresh);
-                    localStorage.setItem('refresh_token', refreshToken);
+                    const refreshToken = this.decodeBase64Url(encodedRefresh, false);
+                    Storage.save('refresh_token', refreshToken);
                 }
 
-                // Clean URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-
-                console.log('✅ Session restored from URL!');
+                this.cleanUrl();
                 return true;
             } catch (e) {
                 console.error('Failed to parse session from URL:', e);
@@ -105,30 +86,33 @@ class WorkOSAuth {
         return false;
     }
 
+    private decodeBase64Url(encoded: string, isJson = true): any {
+        const standardBase64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+        const decoded = atob(standardBase64);
+        return isJson ? JSON.parse(decoded) : decoded;
+    }
+
+    private cleanUrl(): void {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     /**
      * Restores session from URL params or localStorage.
      */
     async restoreSession(): Promise<boolean> {
-        // First check URL for session data from OAuth callback
-        if (this.checkUrlForSession()) {
-            return true;
-        }
+        if (this.checkUrlForSession()) return true;
 
-        // Then check localStorage
-        const stored = localStorage.getItem('auth_session');
+        const stored = Storage.get('auth_session');
 
         if (stored) {
             try {
-                const parsed = JSON.parse(stored);
-                if (parsed.isAuthenticated && parsed.user) {
-                    this.setState(parsed);
-                    console.log('✅ Session restored from localStorage:', parsed);
+                if (stored.isAuthenticated && stored.user) {
+                    this.setState(stored);
                     return true;
                 }
             } catch (e) {
                 console.error('Failed to parse stored session:', e);
-                localStorage.removeItem('auth_session');
-                localStorage.removeItem('refresh_token');
+                this.logout();
             }
         }
         return false;
@@ -138,8 +122,8 @@ class WorkOSAuth {
      * Logs out the current user.
      */
     logout(): void {
-        localStorage.removeItem('auth_session');
-        localStorage.removeItem('refresh_token');
+        Storage.remove('auth_session');
+        Storage.remove('refresh_token');
 
         this.setState({
             isAuthenticated: false,

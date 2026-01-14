@@ -1,40 +1,32 @@
 import { UserListItem } from '../types';
 import { fetchUsers, inviteUser } from '../api/users';
 import { renderRoleTag, renderCallingTag } from '../components/Tags';
+import { UI } from '../utils/core';
 
 export function renderUsersPage(users: UserListItem[] = []): string {
+  const headerActions = UI.button('Invite User', 'invite-user-btn', 'btn-primary', '➕');
 
   return `
     <div class="page users-page">
-      <header class="page-header">
-        <div>
-          <h1>User Management</h1>
-          <p class="subtitle">Manage your team members and their access.</p>
-        </div>
-        <div class="header-actions">
-          <button class="btn-primary" id="invite-user-btn">
-            <span>➕</span> Invite User
-          </button>
-        </div>
-      </header>
+      ${UI.header('User Management', 'Manage your team members and their access.', headerActions)}
 
       <div class="card users-table-card">
         <div class="table-header">
           <input type="text" class="input-glass search-input" placeholder="Search users..." id="user-search" />
           <div class="filter-group">
-            <select class="input-glass select-input" id="role-filter">
-              <option value="">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="leader">Leader</option>
-              <option value="member">Member</option>
-              <option value="viewer">Viewer</option>
-            </select>
-            <select class="input-glass select-input" id="status-filter">
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="suspended">Suspended</option>
-            </select>
+            ${renderFilter('role-filter', [
+    { value: '', label: 'All Roles' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'leader', label: 'Leader' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' }
+  ])}
+            ${renderFilter('status-filter', [
+    { value: '', label: 'All Status' },
+    { value: 'active', label: 'Active' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'suspended', label: 'Suspended' }
+  ])}
           </div>
         </div>
 
@@ -76,13 +68,21 @@ export function renderUsersPage(users: UserListItem[] = []): string {
               </select>
             </div>
             <div class="form-actions">
-              <button type="button" class="btn-secondary" id="cancel-invite">Cancel</button>
-              <button type="submit" class="btn-primary" id="submit-invite">Send Invitation</button>
+              ${UI.button('Cancel', 'cancel-invite', 'btn-secondary')}
+              ${UI.button('Send Invitation', 'submit-invite', 'btn-primary')}
             </div>
           </form>
         </div>
       </div>
     </div>
+  `;
+}
+
+function renderFilter(id: string, options: { value: string, label: string }[]): string {
+  return `
+    <select class="input-glass select-input" id="${id}">
+      ${options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('')}
+    </select>
   `;
 }
 
@@ -97,10 +97,10 @@ function renderUserRow(user: UserListItem): string {
     <tr data-user-id="${user.id}">
       <td>
         <div class="user-cell">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}" alt="${user.name}" class="table-avatar" />
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}" alt="${UI.escape(user.name)}" class="table-avatar" />
           <div>
-            <span class="user-name">${user.name}</span>
-            <span class="user-email">${user.email}</span>
+            <span class="user-name">${UI.escape(user.name)}</span>
+            <span class="user-email">${UI.escape(user.email)}</span>
           </div>
         </div>
       </td>
@@ -110,8 +110,8 @@ function renderUserRow(user: UserListItem): string {
           ${user.calling ? renderCallingTag(user.calling) : ''}
         </div>
       </td>
-      <td><span class="status-badge ${statusClass}">${user.status}</span></td>
-      <td>${user.lastActive}</td>
+      <td><span class="status-badge ${statusClass}">${UI.escape(user.status)}</span></td>
+      <td>${UI.escape(user.lastActive)}</td>
       <td>
         <div class="action-buttons">
           <button class="icon-btn edit-btn" title="Edit">✏️</button>
@@ -124,16 +124,12 @@ function renderUserRow(user: UserListItem): string {
 
 export async function loadUsers(): Promise<UserListItem[]> {
   const users = await fetchUsers();
-
   const tbody = document.getElementById('users-table-body');
   if (tbody) {
-    if (users.length > 0) {
-      tbody.innerHTML = users.map(renderUserRow).join('');
-    } else {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">No users found. Invite someone to get started!</td></tr>';
-    }
+    tbody.innerHTML = users.length > 0
+      ? users.map(renderUserRow).join('')
+      : '<tr><td colspan="5" class="empty-cell">No users found. Invite someone to get started!</td></tr>';
   }
-
   return users;
 }
 
@@ -157,15 +153,13 @@ export function attachUsersListeners(): void {
 
   inviteForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const emailInput = document.getElementById('invite-email') as HTMLInputElement;
     const submitBtn = document.getElementById('submit-invite') as HTMLButtonElement;
-    const email = emailInput.value;
 
     submitBtn.textContent = 'Sending...';
     submitBtn.disabled = true;
 
-    const result = await inviteUser(email);
+    const result = await inviteUser(emailInput.value);
 
     if (result.success) {
       alert(result.message);
