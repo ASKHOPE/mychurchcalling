@@ -8,6 +8,9 @@ import { PageRoute, AuthState } from './types';
 class App {
   private currentPage: PageRoute = 'home';
   private authState: AuthState;
+  private showOtpForm: boolean = false;
+  private otpStep: 'phone' | 'verify' = 'phone';
+  private currentPhone: string = '';
 
   constructor() {
     this.authState = auth.getState();
@@ -36,14 +39,88 @@ class App {
   }
 
   private renderLogin(container: HTMLDivElement): void {
-    container.innerHTML = renderLoginPage(this.authState.isLoading, this.authState.isAuthenticated);
+    container.innerHTML = renderLoginPage(
+      this.authState.isLoading,
+      this.authState.isAuthenticated,
+      this.showOtpForm,
+      this.otpStep
+    );
     container.className = 'app-container login-view';
 
     attachLoginListeners(
       () => auth.login(),
       () => this.showDashboard(),
-      () => auth.logout()
+      () => auth.logout(),
+      () => this.handleOtpLogin(),
+      (phone) => this.handleSendOtp(phone),
+      (code) => this.handleVerifyOtp(code),
+      () => this.handleBackToLogin(),
+      () => this.handleBackToPhone()
     );
+  }
+
+  private handleOtpLogin(): void {
+    this.showOtpForm = true;
+    this.otpStep = 'phone';
+    this.render();
+  }
+
+  private handleSendOtp(phone: string): void {
+    this.currentPhone = phone;
+    // In a real app, you'd call an API to send OTP here
+    console.log('📱 Sending OTP to:', phone);
+    alert(`Demo Mode: OTP sent to ${phone}\n\nEnter any 6-digit code to continue.`);
+    this.otpStep = 'verify';
+    this.render();
+  }
+
+  private handleVerifyOtp(code: string): void {
+    console.log('🔐 Verifying OTP:', code);
+
+    // Demo mode: accept any 6-digit code
+    if (code.length === 6) {
+      // Create a guest user session
+      const guestUser = {
+        _id: `guest_${Date.now()}`,
+        _creationTime: Date.now(),
+        name: 'Guest User',
+        email: this.currentPhone,
+        picture: null,
+        tokenIdentifier: `otp|${this.currentPhone}`,
+        role: 'guest' as const,
+        lastLoginAt: Date.now(),
+      };
+
+      // Store session
+      const sessionData = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: guestUser,
+        accessToken: `guest_token_${Date.now()}`,
+      };
+
+      localStorage.setItem('auth_session', JSON.stringify(sessionData));
+
+      // Reset OTP form state
+      this.showOtpForm = false;
+      this.otpStep = 'phone';
+
+      // Restore session to update auth state
+      auth.restoreSession();
+    } else {
+      alert('Please enter a valid 6-digit code.');
+    }
+  }
+
+  private handleBackToLogin(): void {
+    this.showOtpForm = false;
+    this.otpStep = 'phone';
+    this.render();
+  }
+
+  private handleBackToPhone(): void {
+    this.otpStep = 'phone';
+    this.render();
   }
 
   private showDashboard(): void {
