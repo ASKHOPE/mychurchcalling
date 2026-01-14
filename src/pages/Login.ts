@@ -40,7 +40,14 @@ function renderLoginButton(): string {
         <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      Sign In with WorkOS
+      Sign In
+    </button>
+    <div class="divider">
+      <span>or</span>
+    </div>
+    <button id="workos-signup-btn" class="btn-secondary btn-large">
+      <span>✨</span>
+      Create Account
     </button>
   `;
 }
@@ -69,6 +76,7 @@ function renderLoadingState(): string {
 
 export function attachLoginListeners(onLogin: () => void, onContinue?: () => void, onLogout?: () => void): void {
   document.getElementById('workos-login-btn')?.addEventListener('click', onLogin);
+  document.getElementById('workos-signup-btn')?.addEventListener('click', onLogin); // Both go to WorkOS
 
   document.getElementById('continue-dashboard-btn')?.addEventListener('click', () => {
     if (onContinue) onContinue();
