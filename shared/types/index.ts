@@ -38,7 +38,7 @@ export interface AuthState {
 }
 
 // Navigation
-export type PageRoute = 'home' | 'users' | 'messages' | 'settings' | 'alerts' | 'bin' | 'logs';
+export type PageRoute = 'home' | 'assignments' | 'users' | 'messages' | 'settings' | 'alerts' | 'bin' | 'logs';
 
 export interface NavItem {
     id: PageRoute;

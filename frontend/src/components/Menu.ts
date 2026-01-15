@@ -2,8 +2,9 @@ import { NavItem, PageRoute, User } from '../../../shared/types';
 
 const navItems: NavItem[] = [
   { id: 'home', label: 'Dashboard', icon: '🏠' },
+  { id: 'assignments', label: 'Assignments', icon: '📅' },
   { id: 'users', label: 'User Management', icon: '👥' },
-  { id: 'settings', label: 'Roles & Callings', icon: '🛠️' }, // Re-using settings or adding config
+  { id: 'settings', label: 'Roles & Callings', icon: '🛠️' },
   { id: 'logs', label: 'Change Log', icon: '📜' },
   { id: 'bin', label: 'Recycle Bin', icon: '♻️' },
   { id: 'alerts', label: 'System Alerts', icon: '🔔' },
@@ -22,8 +23,8 @@ export function renderMenu(
 
   const filteredItems = navItems.filter(item => {
     if (role === 'admin') return true;
-    if (role === 'leader') return ['home', 'users', 'logs', 'bin', 'messages', 'settings'].includes(item.id);
-    return ['home', 'messages', 'settings'].includes(item.id);
+    if (role === 'leader') return ['home', 'assignments', 'users', 'logs', 'bin', 'messages', 'settings'].includes(item.id);
+    return ['home', 'assignments', 'messages', 'settings'].includes(item.id);
   });
 
   return `

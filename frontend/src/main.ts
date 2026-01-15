@@ -9,6 +9,7 @@ import { renderMessagesPage } from './pages/Messages';
 import { renderConfigPage, attachConfigListeners } from './pages/Config';
 import { renderLogsPage, loadLogs } from './pages/Logs';
 import { renderBinPage, attachBinListeners, loadBin } from './pages/Bin';
+import { renderAssignmentsPage, attachAssignmentsListeners } from './pages/Assignments';
 import type { PageRoute, AuthState } from '../../shared/types';
 
 import './index.css';
@@ -17,6 +18,7 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/pages.css';
 import './styles/animations.css';
+import './styles/assignments.css';
 
 class App {
   private currentPage: PageRoute = 'home';
@@ -127,15 +129,18 @@ class App {
 
     attachMenuListeners((p) => this.navigateTo(p), () => this.handleLogout());
 
+    // Page-specific initialization
     if (this.currentPage === 'users') attachUsersListeners(() => this.navigateTo('settings'));
     if (this.currentPage === 'settings') attachConfigListeners();
     if (this.currentPage === 'bin') { loadBin(); attachBinListeners(); }
     if (this.currentPage === 'logs') loadLogs();
+    if (this.currentPage === 'assignments') attachAssignmentsListeners();
   }
 
   private renderCurrentPage(): string {
     switch (this.currentPage) {
       case 'home': return renderHomePage(this.authState.user);
+      case 'assignments': return renderAssignmentsPage();
       case 'users': return renderUsersPage([]);
       case 'settings': return renderConfigPage();
       case 'bin': return renderBinPage([]);
