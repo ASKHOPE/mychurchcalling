@@ -34,6 +34,17 @@ export const callback = httpAction(async (ctx, request) => {
     const { user, accessToken, refreshToken } = await workos.userManagement.authenticateWithCode({ code, clientId });
     const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
 
+    const isAdmin = user.email === process.env.ADMIN_EMAIL;
+    const currentRole = (user.metadata?.role as any) || (isAdmin ? "admin" : "member");
+
+    // If first login and is admin, update WorkOS metadata automatically
+    if (isAdmin && !user.metadata?.role) {
+      await workos.userManagement.updateUser({
+        userId: user.id,
+        metadata: { ...user.metadata, role: "admin" }
+      });
+    }
+
     const sessionData = {
       isAuthenticated: true,
       isLoading: false,
@@ -44,8 +55,8 @@ export const callback = httpAction(async (ctx, request) => {
         email: user.email,
         picture: user.profilePictureUrl || null,
         tokenIdentifier: `workos|${user.id}`,
-        role: (user.metadata?.role as any) || "member",
-        calling: (user.metadata?.calling as any) || "Member",
+        role: currentRole,
+        calling: (user.metadata?.calling as any) || (isAdmin ? "Bishop" : "Member"),
         isArchived: !!user.metadata?.isArchived,
         lastLoginAt: Date.now(),
       },
@@ -95,7 +106,11 @@ export const updateUser = httpAction(async (ctx, request) => {
   try {
     const user = await workos.userManagement.updateUser({
       userId,
-      metadata: { role, calling, isArchived: isArchived ? "true" : undefined }
+      metadata: {
+        role,
+        calling,
+        isArchived: isArchived ? "true" : ""
+      }
     });
 
     await logEvent(ctx, "UPDATE_USER", userId, `Updated user permissions/role: ${role}, ${calling}. Archived: ${!!isArchived}`);
@@ -229,40 +244,40 @@ export const home = httpAction(async () => {
  * List dynamic roles
  */
 export const listRoles = httpAction(async (ctx) => {
-    const roles = await ctx.runQuery(api.admin.getRoles);
-    return new Response(JSON.stringify({ roles }), { 
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
-    });
+  const roles = await ctx.runQuery(api.admin.getRoles);
+  return new Response(JSON.stringify({ roles }), {
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+  });
 });
 
 /**
  * List dynamic callings
  */
 export const listCallings = httpAction(async (ctx) => {
-    const callings = await ctx.runQuery(api.admin.getCallings);
-    return new Response(JSON.stringify({ callings }), { 
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
-    });
+  const callings = await ctx.runQuery(api.admin.getCallings);
+  return new Response(JSON.stringify({ callings }), {
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+  });
 });
 
 /**
  * Add new role
  */
 export const createRole = httpAction(async (ctx, request) => {
-    const { name, description, permissions } = await request.json();
-    const roleId = await ctx.runMutation(api.admin.addRole, { name, description, permissions });
-    return new Response(JSON.stringify({ success: true, roleId }), { 
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
-    });
+  const { name, description, permissions } = await request.json();
+  const roleId = await ctx.runMutation(api.admin.addRole, { name, description, permissions });
+  return new Response(JSON.stringify({ success: true, roleId }), {
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+  });
 });
 
 /**
  * Add new calling
  */
 export const createCalling = httpAction(async (ctx, request) => {
-    const { name, category } = await request.json();
-    const callingId = await ctx.runMutation(api.admin.addCalling, { name, category });
-    return new Response(JSON.stringify({ success: true, callingId }), { 
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
-    });
+  const { name, category } = await request.json();
+  const callingId = await ctx.runMutation(api.admin.addCalling, { name, category });
+  return new Response(JSON.stringify({ success: true, callingId }), {
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+  });
 });

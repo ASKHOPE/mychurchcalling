@@ -11,6 +11,19 @@ export default defineSchema({
         calling: v.optional(v.string()),
     }).index("by_token", ["tokenIdentifier"]),
 
+    // Local user accounts (username/password based)
+    localUsers: defineTable({
+        username: v.string(),
+        passwordHash: v.string(), // bcrypt hash
+        email: v.optional(v.string()),
+        name: v.string(),
+        role: v.string(),
+        calling: v.string(),
+        isActive: v.boolean(),
+        createdAt: v.number(),
+        lastLoginAt: v.optional(v.number()),
+    }).index("by_username", ["username"]),
+
     messages: defineTable({
         body: v.string(),
         author: v.string(),
@@ -19,34 +32,34 @@ export default defineSchema({
 
     // Dynamic Application Roles/Permissions
     roles: defineTable({
-        name: v.string(), // e.g. "admin", "leader"
+        name: v.string(),
         description: v.string(),
-        permissions: v.array(v.string()), // e.g. ["manage_users", "view_logs"]
+        permissions: v.array(v.string()),
     }).index("by_name", ["name"]),
 
     // Church Callings (Ministries)
     callings: defineTable({
-        name: v.string(), // e.g. "Bishop"
-        category: v.string(), // e.g. "Priesthood", "Relief Society"
+        name: v.string(),
+        category: v.string(),
     }).index("by_name", ["name"]),
 
     // For soft-deleted items (Users, etc.)
     recycleBin: defineTable({
-        type: v.string(), // "user"
-        originalId: v.string(), // WorkOS ID or Convex ID
-        data: v.any(), // Serialized object data
-        deletedAt: v.number(), // Timestamp
-        deletedBy: v.string(), // Admin name/email
-        expiresAt: v.number(), // deletedAt + 30 days
+        type: v.string(),
+        originalId: v.string(),
+        data: v.any(),
+        deletedAt: v.number(),
+        deletedBy: v.string(),
+        expiresAt: v.number(),
     }).index("by_type", ["type"]).index("by_expires", ["expiresAt"]),
 
     // System event log (Audit Trail)
     auditLogs: defineTable({
-        action: v.string(), // "CREATE_USER", "UPDATE_ROLE", "ARCHIVE_USER", etc.
-        actor: v.string(), // Who did it
-        target: v.string(), // What was changed
-        description: v.string(), // Human readable change
+        action: v.string(),
+        actor: v.string(),
+        target: v.string(),
+        description: v.string(),
         timestamp: v.number(),
-        metadata: v.optional(v.any()), // JSON of changes
+        metadata: v.optional(v.any()),
     }).index("by_timestamp", ["timestamp"]),
 });

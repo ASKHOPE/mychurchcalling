@@ -1,6 +1,12 @@
 import { UI } from '../utils/core';
 
-export function renderLoginPage(isLoading: boolean, isAuthenticated: boolean = false, showOtpForm: boolean = false, otpStep: 'phone' | 'verify' = 'phone'): string {
+export function renderLoginPage(
+  isLoading: boolean,
+  isAuthenticated: boolean = false,
+  showLocalForm: boolean = false,
+  localStep: 'login' | 'register' = 'login',
+  loginError: string = ''
+): string {
   return `
     <div class="login-page">
       <div class="login-container glass-container">
@@ -15,16 +21,16 @@ export function renderLoginPage(isLoading: boolean, isAuthenticated: boolean = f
         <div class="login-content">
           ${isLoading ? UI.spinner('Authenticating...') :
       isAuthenticated ? renderDashboardButton() :
-        showOtpForm ? renderOtpForm(otpStep) :
-          renderLoginButton()}
+        showLocalForm ? renderLocalForm(localStep, loginError) :
+          renderLoginOptions()}
         </div>
 
         <div class="login-footer">
-          <p>Secured by <strong>WorkOS</strong></p>
+          <p>Secured by <strong>WorkOS</strong> & <strong>Convex</strong></p>
           <div class="security-badges">
             <span class="badge">🔒 SSO</span>
-            <span class="badge">🛡️ MFA</span>
-            <span class="badge">📱 OTP</span>
+            <span class="badge">🛡️ Encrypted</span>
+            <span class="badge">👤 Local Auth</span>
           </div>
         </div>
       </div>
@@ -37,44 +43,63 @@ export function renderLoginPage(isLoading: boolean, isAuthenticated: boolean = f
   `;
 }
 
-function renderLoginButton(): string {
+function renderLoginOptions(): string {
   return `
-    ${UI.button('Sign In', 'workos-login-btn', 'btn-primary btn-large', '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')}
+    ${UI.button('Sign In with WorkOS', 'workos-login-btn', 'btn-primary btn-large', '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')}
     
     <div class="divider"><span>or</span></div>
     
-    ${UI.button('Create Account', 'workos-signup-btn', 'btn-secondary btn-large', '✨')}
-    
-    <div class="divider"><span>guest access</span></div>
-    
-    ${UI.button('Login with Phone OTP', 'otp-login-btn', 'btn-outline btn-large', '📱')}
+    ${UI.button('Login with Username', 'local-login-btn', 'btn-secondary btn-large', '👤')}
   `;
 }
 
-function renderOtpForm(step: 'phone' | 'verify'): string {
-  if (step === 'phone') {
+function renderLocalForm(step: 'login' | 'register', error: string): string {
+  if (step === 'login') {
     return `
-      <div class="otp-form">
-        <h3>📱 Phone Login</h3>
-        <p class="otp-subtitle">Enter your phone number to receive a verification code</p>
-        <div class="input-group">
-          <input type="tel" id="phone-input" class="input-field" placeholder="+1 (555) 123-4567" autocomplete="tel" />
+      <div class="local-form">
+        <h3>👤 Username Login</h3>
+        ${error ? `<div class="error-message">${UI.escape(error)}</div>` : ''}
+        <div class="form-group">
+          <label for="username-input">Username</label>
+          <input type="text" id="username-input" class="input-glass" placeholder="Enter username" autocomplete="username" />
         </div>
-        ${UI.button('Send Verification Code', 'send-otp-btn', 'btn-primary btn-large')}
-        <button id="back-to-login-btn" class="btn-text">← Back to login options</button>
+        <div class="form-group">
+          <label for="password-input">Password</label>
+          <input type="password" id="password-input" class="input-glass" placeholder="Enter password" autocomplete="current-password" />
+        </div>
+        ${UI.button('Sign In', 'submit-login-btn', 'btn-primary btn-large')}
+        <div class="form-links">
+          <button id="show-register-btn" class="btn-text">Don't have an account? Register</button>
+          <button id="back-to-options-btn" class="btn-text">← Back to login options</button>
+        </div>
       </div>
     `;
   } else {
     return `
-      <div class="otp-form">
-        <h3>🔐 Enter Verification Code</h3>
-        <p class="otp-subtitle">We sent a 6-digit code to your phone</p>
-        <div class="otp-inputs">
-          ${[0, 1, 2, 3, 4, 5].map(i => `<input type="text" maxlength="1" class="otp-digit" data-index="${i}" />`).join('')}
+      <div class="local-form">
+        <h3>✨ Create Account</h3>
+        ${error ? `<div class="error-message">${UI.escape(error)}</div>` : ''}
+        <div class="form-group">
+          <label for="reg-name-input">Full Name</label>
+          <input type="text" id="reg-name-input" class="input-glass" placeholder="John Doe" />
         </div>
-        ${UI.button('Verify & Sign In', 'verify-otp-btn', 'btn-primary btn-large')}
-        <button id="resend-otp-btn" class="btn-text">Didn't receive code? Resend</button>
-        <button id="back-to-phone-btn" class="btn-text">← Change phone number</button>
+        <div class="form-group">
+          <label for="reg-username-input">Username</label>
+          <input type="text" id="reg-username-input" class="input-glass" placeholder="johndoe" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="reg-email-input">Email (optional)</label>
+          <input type="email" id="reg-email-input" class="input-glass" placeholder="john@example.com" />
+        </div>
+        <div class="form-group">
+          <label for="reg-password-input">Password</label>
+          <input type="password" id="reg-password-input" class="input-glass" placeholder="Choose a password" autocomplete="new-password" />
+        </div>
+        ${UI.button('Create Account', 'submit-register-btn', 'btn-primary btn-large')}
+        <div class="form-links">
+          <button id="show-login-btn" class="btn-text">Already have an account? Sign In</button>
+          <button id="back-to-options-btn" class="btn-text">← Back to login options</button>
+        </div>
       </div>
     `;
   }
@@ -90,55 +115,48 @@ function renderDashboardButton(): string {
 }
 
 export function attachLoginListeners(
-  onLogin: () => void,
+  onWorkosLogin: () => void,
   onContinue?: () => void,
   onLogout?: () => void,
-  onOtpLogin?: () => void,
-  onSendOtp?: (phone: string) => void,
-  onVerifyOtp?: (code: string) => void,
-  onBackToLogin?: () => void,
-  onBackToPhone?: () => void
+  onShowLocalForm?: () => void,
+  onLocalLogin?: (username: string, password: string) => void,
+  onLocalRegister?: (name: string, username: string, password: string, email?: string) => void,
+  onBackToOptions?: () => void,
+  onShowRegister?: () => void,
+  onShowLogin?: () => void
 ): void {
-  document.getElementById('workos-login-btn')?.addEventListener('click', onLogin);
-  document.getElementById('workos-signup-btn')?.addEventListener('click', onLogin);
-
+  document.getElementById('workos-login-btn')?.addEventListener('click', onWorkosLogin);
   document.getElementById('continue-dashboard-btn')?.addEventListener('click', () => onContinue?.());
   document.getElementById('logout-btn')?.addEventListener('click', () => onLogout?.());
-  document.getElementById('otp-login-btn')?.addEventListener('click', () => onOtpLogin?.());
+  document.getElementById('local-login-btn')?.addEventListener('click', () => onShowLocalForm?.());
+  document.getElementById('back-to-options-btn')?.addEventListener('click', () => onBackToOptions?.());
+  document.getElementById('show-register-btn')?.addEventListener('click', () => onShowRegister?.());
+  document.getElementById('show-login-btn')?.addEventListener('click', () => onShowLogin?.());
 
-  document.getElementById('send-otp-btn')?.addEventListener('click', () => {
-    const phone = (document.getElementById('phone-input') as HTMLInputElement)?.value;
-    if (phone) onSendOtp?.(phone);
+  document.getElementById('submit-login-btn')?.addEventListener('click', () => {
+    const username = (document.getElementById('username-input') as HTMLInputElement)?.value;
+    const password = (document.getElementById('password-input') as HTMLInputElement)?.value;
+    if (username && password) onLocalLogin?.(username, password);
   });
 
-  document.getElementById('verify-otp-btn')?.addEventListener('click', () => {
-    const digits = document.querySelectorAll('.otp-digit');
-    const code = Array.from(digits).map((d) => (d as HTMLInputElement).value).join('');
-    if (code.length === 6) onVerifyOtp?.(code);
+  document.getElementById('submit-register-btn')?.addEventListener('click', () => {
+    const name = (document.getElementById('reg-name-input') as HTMLInputElement)?.value;
+    const username = (document.getElementById('reg-username-input') as HTMLInputElement)?.value;
+    const password = (document.getElementById('reg-password-input') as HTMLInputElement)?.value;
+    const email = (document.getElementById('reg-email-input') as HTMLInputElement)?.value;
+    if (name && username && password) onLocalRegister?.(name, username, password, email || undefined);
   });
 
-  document.getElementById('back-to-login-btn')?.addEventListener('click', () => onBackToLogin?.());
-  document.getElementById('back-to-phone-btn')?.addEventListener('click', () => onBackToPhone?.());
-  document.getElementById('resend-otp-btn')?.addEventListener('click', () => alert('OTP resent! (Demo mode)'));
+  // Allow Enter key to submit
+  document.getElementById('password-input')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('submit-login-btn')?.click();
+    }
+  });
 
-  setupOtpInputs();
-}
-
-function setupOtpInputs(): void {
-  const digits = document.querySelectorAll('.otp-digit');
-  digits.forEach((digit, index) => {
-    digit.addEventListener('input', (e) => {
-      const input = e.target as HTMLInputElement;
-      if (input.value.length === 1 && index < digits.length - 1) {
-        (digits[index + 1] as HTMLInputElement).focus();
-      }
-    });
-
-    digit.addEventListener('keydown', (e) => {
-      const key = (e as KeyboardEvent).key;
-      if (key === 'Backspace' && (digit as HTMLInputElement).value === '' && index > 0) {
-        (digits[index - 1] as HTMLInputElement).focus();
-      }
-    });
+  document.getElementById('reg-password-input')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('submit-register-btn')?.click();
+    }
   });
 }

@@ -1,5 +1,5 @@
 import { auth } from './auth/workos';
-import { OTPAuth } from './auth/otp';
+import { localLogin, localRegister, setLocalSession, getLocalSession, clearLocalSession } from './auth/local';
 import { renderMenu, attachMenuListeners } from './components/Menu';
 import { renderLoginPage, attachLoginListeners } from './pages/Login';
 import { renderHomePage } from './pages/Home';
@@ -14,9 +14,9 @@ import { PageRoute, AuthState } from './types';
 class App {
   private currentPage: PageRoute = 'home';
   private authState: AuthState;
-  private showOtpForm: boolean = false;
-  private otpStep: 'phone' | 'verify' = 'phone';
-  private currentPhone: string = '';
+  private showLocalForm: boolean = false;
+  private localStep: 'login' | 'register' = 'login';
+  private loginError: string = '';
 
   constructor() {
     this.authState = auth.getState();
@@ -27,6 +27,14 @@ class App {
   }
 
   async init(): Promise<void> {
+    // Check for local session first
+    const localSession = getLocalSession();
+    if (localSession) {
+      this.authState = localSession;
+      this.render();
+      return;
+    }
+
     await auth.restoreSession();
     this.render();
   }
@@ -47,28 +55,64 @@ class App {
     container.innerHTML = renderLoginPage(
       this.authState.isLoading,
       this.authState.isAuthenticated,
-      this.showOtpForm,
-      this.otpStep
+      this.showLocalForm,
+      this.localStep,
+      this.loginError
     );
     container.className = 'app-container login-view';
 
     attachLoginListeners(
+      // WorkOS Login
       () => auth.login(),
+      // Continue to Dashboard
       () => this.showDashboard(),
-      () => auth.logout(),
-      () => { this.showOtpForm = true; this.otpStep = 'phone'; this.render(); },
-      async (phone) => {
-        this.currentPhone = phone;
-        if (await OTPAuth.sendOtp(phone)) { this.otpStep = 'verify'; this.render(); }
-      },
-      async (code) => {
-        if (await OTPAuth.verifyOtp(code, this.currentPhone)) {
-          this.showOtpForm = false; this.otpStep = 'phone';
+      // Logout
+      () => this.handleLogout(),
+      // Show local form
+      () => { this.showLocalForm = true; this.localStep = 'login'; this.loginError = ''; this.render(); },
+      // Local Login
+      async (username, password) => {
+        const result = await localLogin(username, password);
+        if (result.success && result.user) {
+          setLocalSession(result.user);
+          this.authState = getLocalSession()!;
+          this.showLocalForm = false;
+          this.loginError = '';
+          this.render();
+        } else {
+          this.loginError = result.error || 'Login failed';
+          this.render();
         }
       },
-      () => { this.showOtpForm = false; this.render(); },
-      () => { this.otpStep = 'phone'; this.render(); }
+      // Local Register
+      async (name, username, password, email) => {
+        const result = await localRegister(username, password, name, email);
+        if (result.success) {
+          // Auto-login after registration
+          const loginResult = await localLogin(username, password);
+          if (loginResult.success && loginResult.user) {
+            setLocalSession(loginResult.user);
+            this.authState = getLocalSession()!;
+            this.showLocalForm = false;
+            this.render();
+          }
+        } else {
+          this.loginError = result.error || 'Registration failed';
+          this.render();
+        }
+      },
+      // Back to options
+      () => { this.showLocalForm = false; this.loginError = ''; this.render(); },
+      // Show register
+      () => { this.localStep = 'register'; this.loginError = ''; this.render(); },
+      // Show login
+      () => { this.localStep = 'login'; this.loginError = ''; this.render(); }
     );
+  }
+
+  private handleLogout(): void {
+    clearLocalSession();
+    auth.logout();
   }
 
   private showDashboard(): void {
@@ -78,7 +122,7 @@ class App {
 
   private renderApp(container: HTMLDivElement): void {
     container.className = 'app-container app-view';
-    const menuHtml = renderMenu(this.authState.user, this.currentPage, (p) => this.navigateTo(p), () => auth.logout());
+    const menuHtml = renderMenu(this.authState.user, this.currentPage, (p) => this.navigateTo(p), () => this.handleLogout());
     const pageHtml = this.renderCurrentPage();
 
     container.innerHTML = `
@@ -86,7 +130,7 @@ class App {
       <main class="main-content">${pageHtml}</main>
     `;
 
-    attachMenuListeners((p) => this.navigateTo(p), () => auth.logout());
+    attachMenuListeners((p) => this.navigateTo(p), () => this.handleLogout());
 
     // Page-specific initialization
     if (this.currentPage === 'users') attachUsersListeners(() => this.navigateTo('settings'));
