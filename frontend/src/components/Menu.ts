@@ -1,4 +1,4 @@
-import { NavItem, PageRoute, User } from '../types';
+import { NavItem, PageRoute, User } from '../../../shared/types';
 
 const navItems: NavItem[] = [
   { id: 'home', label: 'Dashboard', icon: '🏠' },

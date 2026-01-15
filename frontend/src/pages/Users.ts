@@ -1,4 +1,4 @@
-import { UserListItem, UserRole, UserCalling } from '../types';
+import { UserListItem, UserRole, UserCalling } from '../../../shared/types';
 import { fetchUsers, inviteUser, updateUserDetails, moveToBin } from '../api/users';
 import { fetchRoles, fetchCallings } from '../api/config';
 import { renderRoleTag, renderCallingTag } from '../components/Tags';

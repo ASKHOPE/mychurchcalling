@@ -1,4 +1,4 @@
-import { User } from '../types';
+import { User } from '../../../shared/types';
 
 export function renderSettingsPage(user: User | null): string {
     return `

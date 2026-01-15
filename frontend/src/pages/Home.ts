@@ -1,4 +1,4 @@
-import { User } from '../types';
+import { User } from '../../../shared/types';
 import { renderRoleTag, renderCallingTag } from '../components/Tags';
 import { UI } from '../utils/core';
 

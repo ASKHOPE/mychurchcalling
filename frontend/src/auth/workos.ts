@@ -1,4 +1,4 @@
-import { AuthState } from '../types';
+import { AuthState } from '../../../shared/types';
 import { Storage } from '../utils/core';
 
 // Convex HTTP endpoint base URL

@@ -1,4 +1,4 @@
-import { Message } from "../types";
+import { Message } from '../../../shared/types';
 
 // Note: In a real app with Vite/Convex, you'd use the ConvexClient here.
 // For this setup, we'll maintain the structure for modularity.
@@ -15,4 +15,4 @@ export class ConvexAPI {
     }
 }
 
-export const api = new ConvexAPI();
+export const convexApi = new ConvexAPI();

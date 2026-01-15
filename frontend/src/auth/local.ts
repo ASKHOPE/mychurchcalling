@@ -1,4 +1,4 @@
-import { AuthState } from '../types';
+import { AuthState } from '../../../shared/types';
 
 // @ts-ignore - Vite env
 const CONVEX_URL = (import.meta as any).env?.VITE_CONVEX_URL?.replace('.cloud', '.site') || '';

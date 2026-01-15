@@ -9,7 +9,14 @@ import { renderMessagesPage } from './pages/Messages';
 import { renderConfigPage, attachConfigListeners } from './pages/Config';
 import { renderLogsPage, loadLogs } from './pages/Logs';
 import { renderBinPage, attachBinListeners, loadBin } from './pages/Bin';
-import { PageRoute, AuthState } from './types';
+import type { PageRoute, AuthState } from '../../shared/types';
+
+import './index.css';
+import './styles.css';
+import './styles/base.css';
+import './styles/components.css';
+import './styles/pages.css';
+import './styles/animations.css';
 
 class App {
   private currentPage: PageRoute = 'home';
@@ -27,14 +34,12 @@ class App {
   }
 
   async init(): Promise<void> {
-    // Check for local session first
     const localSession = getLocalSession();
     if (localSession) {
       this.authState = localSession;
       this.render();
       return;
     }
-
     await auth.restoreSession();
     this.render();
   }
@@ -62,15 +67,10 @@ class App {
     container.className = 'app-container login-view';
 
     attachLoginListeners(
-      // WorkOS Login
       () => auth.login(),
-      // Continue to Dashboard
       () => this.showDashboard(),
-      // Logout
       () => this.handleLogout(),
-      // Show local form
       () => { this.showLocalForm = true; this.localStep = 'login'; this.loginError = ''; this.render(); },
-      // Local Login
       async (username, password) => {
         const result = await localLogin(username, password);
         if (result.success && result.user) {
@@ -84,11 +84,9 @@ class App {
           this.render();
         }
       },
-      // Local Register
       async (name, username, password, email) => {
         const result = await localRegister(username, password, name, email);
         if (result.success) {
-          // Auto-login after registration
           const loginResult = await localLogin(username, password);
           if (loginResult.success && loginResult.user) {
             setLocalSession(loginResult.user);
@@ -101,11 +99,8 @@ class App {
           this.render();
         }
       },
-      // Back to options
       () => { this.showLocalForm = false; this.loginError = ''; this.render(); },
-      // Show register
       () => { this.localStep = 'register'; this.loginError = ''; this.render(); },
-      // Show login
       () => { this.localStep = 'login'; this.loginError = ''; this.render(); }
     );
   }
@@ -132,7 +127,6 @@ class App {
 
     attachMenuListeners((p) => this.navigateTo(p), () => this.handleLogout());
 
-    // Page-specific initialization
     if (this.currentPage === 'users') attachUsersListeners(() => this.navigateTo('settings'));
     if (this.currentPage === 'settings') attachConfigListeners();
     if (this.currentPage === 'bin') { loadBin(); attachBinListeners(); }

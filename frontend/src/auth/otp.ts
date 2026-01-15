@@ -1,5 +1,5 @@
 import { auth } from './workos';
-import { User } from '../types';
+import { User } from '../../../shared/types';
 import { Storage } from '../utils/core';
 
 export class OTPAuth {

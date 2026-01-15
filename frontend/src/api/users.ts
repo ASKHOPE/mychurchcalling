@@ -1,4 +1,4 @@
-import { UserListItem, UserRole, UserCalling } from '../types';
+import { UserListItem, UserRole, UserCalling } from '../../../shared/types';
 import { auth } from '../auth/workos';
 
 /**

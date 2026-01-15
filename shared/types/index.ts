@@ -57,3 +57,39 @@ export interface UserListItem {
     status: 'active' | 'pending' | 'suspended';
     lastActive: string;
 }
+
+// Audit Log
+export interface AuditLogEntry {
+    _id: string;
+    action: string;
+    actor: string;
+    target: string;
+    description: string;
+    timestamp: number;
+    metadata?: any;
+}
+
+// Recycle Bin
+export interface BinItem {
+    _id: string;
+    type: string;
+    originalId: string;
+    data: any;
+    deletedAt: number;
+    deletedBy: string;
+    expiresAt: number;
+}
+
+// Roles & Callings Config
+export interface AppRole {
+    _id?: string;
+    name: string;
+    description: string;
+    permissions: string[];
+}
+
+export interface AppCalling {
+    _id?: string;
+    name: string;
+    category: string;
+}

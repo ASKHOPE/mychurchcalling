@@ -1,4 +1,4 @@
-import { UserRole, UserCalling } from '../types';
+import { UserRole, UserCalling } from '../../../shared/types';
 
 export function renderRoleTag(role: UserRole): string {
     const icon = {
