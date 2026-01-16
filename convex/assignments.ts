@@ -2,7 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 // ============================================
-// SUNDAY ASSIGNMENTS CRUD
+// SUNDAY ASSIGNMENTS - FULL CRUD
 // ============================================
 
 /**
@@ -66,55 +66,82 @@ export const create = mutation({
     args: {
         year: v.number(),
         month: v.number(),
+        monthName: v.string(),
         sundayNumber: v.number(),
         date: v.string(),
-        sacrament: v.object({
+        weekRange: v.string(),
+        hymns: v.object({
+            opening: v.optional(v.object({
+                hymnNumber: v.number(),
+                title: v.string(),
+                url: v.optional(v.string()),
+            })),
+            sacrament: v.optional(v.object({
+                hymnNumber: v.number(),
+                title: v.string(),
+                url: v.optional(v.string()),
+            })),
+            interlude: v.optional(v.object({
+                hymnNumber: v.number(),
+                title: v.string(),
+                url: v.optional(v.string()),
+            })),
+            special: v.optional(v.object({
+                hymnNumber: v.number(),
+                title: v.string(),
+                url: v.optional(v.string()),
+            })),
+            closing: v.optional(v.object({
+                hymnNumber: v.number(),
+                title: v.string(),
+                url: v.optional(v.string()),
+            })),
+        }),
+        sacramentMeeting: v.object({
             conductingLeader: v.optional(v.string()),
-            openingHymn: v.optional(v.string()),
-            sacramentHymn: v.optional(v.string()),
-            interludeHymn: v.optional(v.string()),
-            closingHymn: v.optional(v.string()),
-            specialHymn: v.optional(v.string()),
+            presiding: v.optional(v.string()),
             openingPrayer: v.optional(v.string()),
             closingPrayer: v.optional(v.string()),
-            speakers: v.array(v.object({
-                name: v.string(),
-                topic: v.optional(v.string()),
-                duration: v.optional(v.number()),
-            })),
             announcements: v.optional(v.string()),
         }),
+        talks: v.array(v.object({
+            speakerName: v.string(),
+            organization: v.optional(v.string()),
+            topic: v.optional(v.string()),
+            sourceType: v.optional(v.string()),
+            sourceTitle: v.optional(v.string()),
+            sourceUrl: v.optional(v.string()),
+            duration: v.optional(v.number()),
+            order: v.number(),
+        })),
         sundaySchool: v.object({
-            topic: v.string(),
-            scripture: v.optional(v.string()),
+            lessonType: v.string(),
+            scriptureBlock: v.string(),
+            lessonTitle: v.optional(v.string()),
+            lessonUrl: v.optional(v.string()),
             instructor: v.optional(v.string()),
             notes: v.optional(v.string()),
         }),
-        elderQuorum: v.object({
-            topic: v.string(),
+        eldersQuorum: v.object({
+            classType: v.string(),
+            lessonType: v.string(),
+            principleSelected: v.optional(v.string()),
+            principleUrl: v.optional(v.string()),
+            conferenceTalkSelected: v.optional(v.string()),
+            conferenceTalkUrl: v.optional(v.string()),
             instructor: v.optional(v.string()),
             notes: v.optional(v.string()),
         }),
         reliefSociety: v.object({
-            topic: v.string(),
+            classType: v.string(),
+            lessonType: v.string(),
+            principleSelected: v.optional(v.string()),
+            principleUrl: v.optional(v.string()),
+            conferenceTalkSelected: v.optional(v.string()),
+            conferenceTalkUrl: v.optional(v.string()),
             instructor: v.optional(v.string()),
             notes: v.optional(v.string()),
         }),
-        youngWomen: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
-        youngMen: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
-        primary: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
         status: v.string(),
         createdBy: v.optional(v.string()),
         notes: v.optional(v.string()),
@@ -143,38 +170,12 @@ export const create = mutation({
 export const update = mutation({
     args: {
         id: v.id("sundayAssignments"),
-        sacrament: v.optional(v.object({
-            conductingLeader: v.optional(v.string()),
-            openingHymn: v.optional(v.string()),
-            sacramentHymn: v.optional(v.string()),
-            interludeHymn: v.optional(v.string()),
-            closingHymn: v.optional(v.string()),
-            specialHymn: v.optional(v.string()),
-            openingPrayer: v.optional(v.string()),
-            closingPrayer: v.optional(v.string()),
-            speakers: v.array(v.object({
-                name: v.string(),
-                topic: v.optional(v.string()),
-                duration: v.optional(v.number()),
-            })),
-            announcements: v.optional(v.string()),
-        })),
-        sundaySchool: v.optional(v.object({
-            topic: v.string(),
-            scripture: v.optional(v.string()),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
-        elderQuorum: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
-        reliefSociety: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
+        hymns: v.optional(v.any()),
+        sacramentMeeting: v.optional(v.any()),
+        talks: v.optional(v.any()),
+        sundaySchool: v.optional(v.any()),
+        eldersQuorum: v.optional(v.any()),
+        reliefSociety: v.optional(v.any()),
         status: v.optional(v.string()),
         notes: v.optional(v.string()),
         updatedBy: v.optional(v.string()),
@@ -220,167 +221,76 @@ export const remove = mutation({
     },
 });
 
-// ============================================
-// HYMNS
-// ============================================
-
-export const getHymns = query({
-    args: { category: v.optional(v.string()) },
-    handler: async (ctx, args) => {
-        if (args.category) {
-            return await ctx.db
-                .query("hymns")
-                .withIndex("by_category", q => q.eq("category", args.category!))
-                .collect();
-        }
-        return await ctx.db.query("hymns").collect();
-    },
-});
-
-export const addHymn = mutation({
-    args: {
-        number: v.number(),
-        title: v.string(),
-        category: v.string(),
-    },
-    handler: async (ctx, args) => {
-        return await ctx.db.insert("hymns", { ...args, isFavorite: false });
-    },
-});
-
-// ============================================
-// COME FOLLOW ME LESSONS
-// ============================================
-
-export const getCfmLessons = query({
-    args: { year: v.number() },
-    handler: async (ctx, args) => {
-        return await ctx.db
-            .query("cfmLessons")
-            .filter(q => q.eq(q.field("year"), args.year))
-            .collect();
-    },
-});
-
-export const addCfmLesson = mutation({
-    args: {
-        year: v.number(),
-        week: v.number(),
-        title: v.string(),
-        scripture: v.string(),
-        dateRange: v.string(),
-        summary: v.optional(v.string()),
-    },
-    handler: async (ctx, args) => {
-        return await ctx.db.insert("cfmLessons", args);
-    },
-});
-
-// ============================================
-// MEMBERS
-// ============================================
-
-export const getMembers = query({
-    handler: async (ctx) => {
-        return await ctx.db.query("members").filter(q => q.eq(q.field("isActive"), true)).collect();
-    },
-});
-
-export const addMember = mutation({
-    args: {
-        name: v.string(),
-        phone: v.optional(v.string()),
-        email: v.optional(v.string()),
-        callings: v.array(v.string()),
-    },
-    handler: async (ctx, args) => {
-        return await ctx.db.insert("members", {
-            ...args,
-            isActive: true,
-        });
-    },
-});
-
-// ============================================
-// SEED DATA
-// ============================================
-
-export const seedHymns = mutation({
-    handler: async (ctx) => {
-        const existing = await ctx.db.query("hymns").first();
-        if (existing) return { message: "Already seeded" };
-
-        const hymns = [
-            { number: 2, title: "The Spirit of God", category: "Opening" },
-            { number: 3, title: "Now Let Us Rejoice", category: "Opening" },
-            { number: 19, title: "We Thank Thee, O God, for a Prophet", category: "Opening" },
-            { number: 26, title: "Joseph Smith's First Prayer", category: "Opening" },
-            { number: 169, title: "As Now We Take the Sacrament", category: "Sacrament" },
-            { number: 170, title: "God, Our Father, Hear Us Pray", category: "Sacrament" },
-            { number: 171, title: "With Humble Heart", category: "Sacrament" },
-            { number: 172, title: "'Tis Sweet to Sing the Matchless Love", category: "Sacrament" },
-            { number: 173, title: "While of These Emblems We Partake", category: "Sacrament" },
-            { number: 174, title: "In Remembrance of Thy Suffering", category: "Sacrament" },
-            { number: 175, title: "O God, the Eternal Father", category: "Sacrament" },
-            { number: 176, title: "'Tis Sweet To Sing", category: "Sacrament" },
-            { number: 116, title: "Come, Follow Me", category: "Closing" },
-            { number: 223, title: "Have I Done Any Good?", category: "Closing" },
-            { number: 239, title: "Choose the Right", category: "Closing" },
-            { number: 301, title: "I Am a Child of God", category: "Special" },
-            { number: 85, title: "How Firm a Foundation", category: "Special" },
-            { number: 136, title: "I Know That My Redeemer Lives", category: "Special" },
-        ];
-
-        for (const hymn of hymns) {
-            await ctx.db.insert("hymns", { ...hymn, isFavorite: false });
-        }
-
-        return { message: "Seeded hymns" };
-    },
-});
-
-export const seed2026Assignments = mutation({
+/**
+ * Seed 2026 assignments with linked reference data
+ */
+export const seed2026 = mutation({
     handler: async (ctx) => {
         const existing = await ctx.db.query("sundayAssignments").first();
-        if (existing) return { message: "Already has assignments" };
+        if (existing) return { message: "Assignments already exist" };
 
-        // Get all Sundays in January 2026
+        // Get hymns for reference
+        const openingHymn = await ctx.db.query("hymnIndex").withIndex("by_number", q => q.eq("number", 2)).first();
+        const sacramentHymn = await ctx.db.query("hymnIndex").withIndex("by_number", q => q.eq("number", 175)).first();
+        const closingHymn = await ctx.db.query("hymnIndex").withIndex("by_number", q => q.eq("number", 116)).first();
+
+        // Get CFM lessons
+        const cfmLessons = await ctx.db.query("cfmIndex").withIndex("by_year", q => q.eq("year", 2026)).collect();
+
         const sundays2026Jan = [
-            { date: "2026-01-04", sundayNumber: 1 },
-            { date: "2026-01-11", sundayNumber: 2 },
-            { date: "2026-01-18", sundayNumber: 3 },
-            { date: "2026-01-25", sundayNumber: 4 },
+            { date: "2026-01-04", sundayNumber: 1, weekRange: "Dec 30 - Jan 5", weekNum: 1 },
+            { date: "2026-01-11", sundayNumber: 2, weekRange: "Jan 6-12", weekNum: 2 },
+            { date: "2026-01-18", sundayNumber: 3, weekRange: "Jan 13-19", weekNum: 3 },
+            { date: "2026-01-25", sundayNumber: 4, weekRange: "Jan 20-26", weekNum: 4 },
         ];
 
         for (const sunday of sundays2026Jan) {
+            const cfm = cfmLessons.find(l => l.weekNumber === sunday.weekNum);
+
             await ctx.db.insert("sundayAssignments", {
                 year: 2026,
                 month: 1,
+                monthName: "January",
                 sundayNumber: sunday.sundayNumber,
                 date: sunday.date,
-                sacrament: {
-                    openingHymn: "The Spirit of God (#2)",
-                    sacramentHymn: "O God, the Eternal Father (#175)",
-                    closingHymn: "Come, Follow Me (#116)",
-                    speakers: [
-                        { name: "TBD", topic: "Faith in Christ" }
-                    ],
+                weekRange: sunday.weekRange,
+                hymns: {
+                    opening: openingHymn ? { hymnNumber: openingHymn.number, title: openingHymn.title, url: openingHymn.url } : undefined,
+                    sacrament: sacramentHymn ? { hymnNumber: sacramentHymn.number, title: sacramentHymn.title, url: sacramentHymn.url } : undefined,
+                    closing: closingHymn ? { hymnNumber: closingHymn.number, title: closingHymn.title, url: closingHymn.url } : undefined,
                 },
+                sacramentMeeting: {
+                    conductingLeader: undefined,
+                    openingPrayer: undefined,
+                    closingPrayer: undefined,
+                },
+                talks: [
+                    { speakerName: "TBD", topic: "Faith in Christ", order: 1 }
+                ],
                 sundaySchool: {
-                    topic: "1 Nephi 1-7",
-                    scripture: "Come Follow Me",
+                    lessonType: "Come Follow Me",
+                    scriptureBlock: cfm?.scriptureBlock || "1 Nephi 1-5",
+                    lessonTitle: cfm?.lessonTitle,
+                    lessonUrl: cfm?.url,
+                    instructor: "TBD",
                 },
-                elderQuorum: {
-                    topic: "1 Nephi 1-7",
+                eldersQuorum: {
+                    classType: "EQ",
+                    lessonType: "Come Follow Me",
+                    principleSelected: cfm?.scriptureBlock,
+                    instructor: "EQ Presidency",
                 },
                 reliefSociety: {
-                    topic: "1 Nephi 1-7",
+                    classType: "RS",
+                    lessonType: "Come Follow Me",
+                    principleSelected: cfm?.scriptureBlock,
+                    instructor: "RS Presidency",
                 },
                 status: "draft",
                 updatedAt: Date.now(),
             });
         }
 
-        return { message: "Seeded January 2026 assignments" };
+        return { message: "Seeded January 2026 assignments with linked references" };
     },
 });

@@ -10,6 +10,8 @@ import { renderConfigPage, attachConfigListeners } from './pages/Config';
 import { renderLogsPage, loadLogs } from './pages/Logs';
 import { renderBinPage, attachBinListeners, loadBin } from './pages/Bin';
 import { renderAssignmentsPage, attachAssignmentsListeners } from './pages/Assignments';
+import { renderActivitiesPage, attachActivitiesListeners } from './pages/Activities';
+import { renderCleaningPage, attachCleaningListeners } from './pages/Cleaning';
 import type { PageRoute, AuthState } from '../../shared/types';
 
 import './index.css';
@@ -135,12 +137,16 @@ class App {
     if (this.currentPage === 'bin') { loadBin(); attachBinListeners(); }
     if (this.currentPage === 'logs') loadLogs();
     if (this.currentPage === 'assignments') attachAssignmentsListeners();
+    if (this.currentPage === 'activities') attachActivitiesListeners();
+    if (this.currentPage === 'cleaning') attachCleaningListeners();
   }
 
   private renderCurrentPage(): string {
     switch (this.currentPage) {
       case 'home': return renderHomePage(this.authState.user);
+      case 'activities': return renderActivitiesPage();
       case 'assignments': return renderAssignmentsPage();
+      case 'cleaning': return renderCleaningPage();
       case 'users': return renderUsersPage([]);
       case 'settings': return renderConfigPage();
       case 'bin': return renderBinPage([]);

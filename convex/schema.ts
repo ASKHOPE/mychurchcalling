@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// SCHEMA VALIDATION DISABLED - Clear sundayAssignments table in dashboard, then re-enable
 export default defineSchema({
     users: defineTable({
         name: v.string(),
@@ -11,7 +12,6 @@ export default defineSchema({
         calling: v.optional(v.string()),
     }).index("by_token", ["tokenIdentifier"]),
 
-    // Local user accounts (username/password based)
     localUsers: defineTable({
         username: v.string(),
         passwordHash: v.string(),
@@ -24,96 +24,83 @@ export default defineSchema({
         lastLoginAt: v.optional(v.number()),
     }).index("by_username", ["username"]),
 
-    messages: defineTable({
-        body: v.string(),
-        author: v.string(),
-        userId: v.optional(v.id("users")),
-    }).index("by_user", ["userId"]),
-
-    // Dynamic Application Roles/Permissions
-    roles: defineTable({
-        name: v.string(),
-        description: v.string(),
-        permissions: v.array(v.string()),
-    }).index("by_name", ["name"]),
-
-    // Church Callings (Ministries)
-    callings: defineTable({
-        name: v.string(),
+    hymnIndex: defineTable({
+        number: v.number(),
+        title: v.string(),
         category: v.string(),
-    }).index("by_name", ["name"]),
+        url: v.optional(v.string()),
+        isFavorite: v.optional(v.boolean()),
+    })
+        .index("by_number", ["number"])
+        .index("by_category", ["category"]),
 
-    // ============================================
-    // SUNDAY TEACHING ASSIGNMENTS
-    // ============================================
+    cfmIndex: defineTable({
+        year: v.number(),
+        weekNumber: v.number(),
+        weekRange: v.string(),
+        scriptureBlock: v.string(),
+        lessonTitle: v.string(),
+        url: v.string(),
+        book: v.optional(v.string()),
+    })
+        .index("by_year", ["year"])
+        .index("by_year_week", ["year", "weekNumber"]),
 
-    // Sunday Assignments - Main table for each Sunday's assignments
+    gospelPrinciplesIndex: defineTable({
+        number: v.number(),
+        title: v.string(),
+        url: v.string(),
+        category: v.optional(v.string()),
+    })
+        .index("by_number", ["number"]),
+
+    conferenceTalkIndex: defineTable({
+        title: v.string(),
+        speaker: v.string(),
+        conferenceSession: v.string(),
+        year: v.number(),
+        month: v.string(),
+        url: v.string(),
+        topic: v.optional(v.string()),
+    })
+        .index("by_year", ["year"])
+        .index("by_speaker", ["speaker"]),
+
+    delegationIndex: defineTable({
+        calling: v.string(),
+        assignedPerson: v.string(),
+        organization: v.string(),
+        startDate: v.optional(v.string()),
+        notes: v.optional(v.string()),
+        permissions: v.array(v.string()),
+        isActive: v.boolean(),
+    })
+        .index("by_calling", ["calling"])
+        .index("by_organization", ["organization"]),
+
+    // Use v.any() temporarily to allow old data
     sundayAssignments: defineTable({
-        year: v.number(),                    // 2026
-        month: v.number(),                   // 1-12
-        sundayNumber: v.number(),            // 1st, 2nd, 3rd, 4th, 5th Sunday
-        date: v.string(),                    // "2026-01-05" ISO format
-
-        // Sacrament Meeting
-        sacrament: v.object({
-            conductingLeader: v.optional(v.string()),
-            openingHymn: v.optional(v.string()),
-            sacramentHymn: v.optional(v.string()),
-            interludeHymn: v.optional(v.string()),
-            closingHymn: v.optional(v.string()),
-            specialHymn: v.optional(v.string()),
-            openingPrayer: v.optional(v.string()),
-            closingPrayer: v.optional(v.string()),
-            speakers: v.array(v.object({
-                name: v.string(),
-                topic: v.optional(v.string()),
-                duration: v.optional(v.number()), // minutes
-            })),
-            announcements: v.optional(v.string()),
-        }),
-
-        // Sunday School
-        sundaySchool: v.object({
-            topic: v.string(),               // Come Follow Me topic
-            scripture: v.optional(v.string()), // e.g., "1 Nephi 1-7"
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        }),
-
-        // Quorum/Relief Society Classes
-        elderQuorum: v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        }),
-
-        reliefSociety: v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        }),
-
-        youngWomen: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
-
-        youngMen: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
-
-        primary: v.optional(v.object({
-            topic: v.string(),
-            instructor: v.optional(v.string()),
-            notes: v.optional(v.string()),
-        })),
-
-        // Metadata
-        status: v.string(),                  // "draft", "confirmed", "completed"
+        year: v.number(),
+        month: v.number(),
+        monthName: v.optional(v.string()),
+        sundayNumber: v.number(),
+        date: v.string(),
+        weekRange: v.optional(v.string()),
+        hymns: v.optional(v.any()),
+        sacrament: v.optional(v.any()),
+        sacramentMeeting: v.optional(v.any()),
+        talks: v.optional(v.any()),
+        speakers: v.optional(v.any()),
+        sundaySchool: v.optional(v.any()),
+        eldersQuorum: v.optional(v.any()),
+        elderQuorum: v.optional(v.any()),
+        reliefSociety: v.optional(v.any()),
+        youngWomen: v.optional(v.any()),
+        youngMen: v.optional(v.any()),
+        primary: v.optional(v.any()),
+        status: v.string(),
         createdBy: v.optional(v.string()),
+        updatedBy: v.optional(v.string()),
         updatedAt: v.number(),
         notes: v.optional(v.string()),
     })
@@ -121,39 +108,23 @@ export default defineSchema({
         .index("by_year_month", ["year", "month"])
         .index("by_status", ["status"]),
 
-    // Hymn Library
-    hymns: defineTable({
-        number: v.number(),                  // Hymn number
-        title: v.string(),
-        category: v.string(),                // "Opening", "Sacrament", "Closing", "Special"
-        isFavorite: v.optional(v.boolean()),
-    }).index("by_number", ["number"]).index("by_category", ["category"]),
+    messages: defineTable({
+        body: v.string(),
+        author: v.string(),
+        userId: v.optional(v.id("users")),
+    }).index("by_user", ["userId"]),
 
-    // Come Follow Me Lessons
-    cfmLessons: defineTable({
-        year: v.number(),
-        week: v.number(),
-        title: v.string(),
-        scripture: v.string(),
-        dateRange: v.string(),               // "January 6-12"
-        summary: v.optional(v.string()),
-    }).index("by_year_week", ["year", "week"]),
-
-    // Member directory (for speaker/teacher assignments)
-    members: defineTable({
+    roles: defineTable({
         name: v.string(),
-        phone: v.optional(v.string()),
-        email: v.optional(v.string()),
-        callings: v.array(v.string()),
-        isActive: v.boolean(),
-        notes: v.optional(v.string()),
+        description: v.string(),
+        permissions: v.array(v.string()),
     }).index("by_name", ["name"]),
 
-    // ============================================
-    // EXISTING TABLES
-    // ============================================
+    callings: defineTable({
+        name: v.string(),
+        category: v.string(),
+    }).index("by_name", ["name"]),
 
-    // For soft-deleted items (Users, etc.)
     recycleBin: defineTable({
         type: v.string(),
         originalId: v.string(),
@@ -163,7 +134,6 @@ export default defineSchema({
         expiresAt: v.number(),
     }).index("by_type", ["type"]).index("by_expires", ["expiresAt"]),
 
-    // System event log (Audit Trail)
     auditLogs: defineTable({
         action: v.string(),
         actor: v.string(),
@@ -172,4 +142,49 @@ export default defineSchema({
         timestamp: v.number(),
         metadata: v.optional(v.any()),
     }).index("by_timestamp", ["timestamp"]),
+
+    // Old hymns table (for compatibility)
+    hymns: defineTable({
+        number: v.number(),
+        title: v.string(),
+        category: v.string(),
+        url: v.optional(v.string()),
+        isFavorite: v.optional(v.boolean()),
+    }),
+
+    // Old members table
+    members: defineTable({
+        name: v.string(),
+        phone: v.optional(v.string()),
+        email: v.optional(v.string()),
+        callings: v.optional(v.array(v.string())),
+        isActive: v.optional(v.boolean()),
+        notes: v.optional(v.string()),
+    }),
+
+    // Old CFM lessons
+    cfmLessons: defineTable({
+        year: v.number(),
+        week: v.number(),
+        title: v.string(),
+        scripture: v.string(),
+        dateRange: v.string(),
+        summary: v.optional(v.string()),
+    }),
+
+    announcementsIndex: defineTable({
+        content: v.string(),
+        type: v.string(), // "recurring" | "specific"
+        targetDate: v.optional(v.string()), // YYYY-MM-DD
+        active: v.boolean(),
+        category: v.optional(v.string()),
+    }).index("by_type", ["type"]).index("by_active", ["active"]),
+
+    meetingTypesIndex: defineTable({
+        name: v.string(),
+        label: v.string(),
+        icon: v.optional(v.string()),
+        subtypes: v.optional(v.array(v.string())),
+        active: v.boolean(),
+    }).index("by_name", ["name"]),
 });

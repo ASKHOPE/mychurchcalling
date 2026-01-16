@@ -2,7 +2,9 @@ import { NavItem, PageRoute, User } from '../../../shared/types';
 
 const navItems: NavItem[] = [
   { id: 'home', label: 'Dashboard', icon: '🏠' },
+  { id: 'activities', label: 'Activities', icon: '📆' },
   { id: 'assignments', label: 'Assignments', icon: '📅' },
+  { id: 'cleaning', label: 'Cleaning', icon: '🧹' },
   { id: 'users', label: 'User Management', icon: '👥' },
   { id: 'settings', label: 'Roles & Callings', icon: '🛠️' },
   { id: 'logs', label: 'Change Log', icon: '📜' },
@@ -23,8 +25,8 @@ export function renderMenu(
 
   const filteredItems = navItems.filter(item => {
     if (role === 'admin') return true;
-    if (role === 'leader') return ['home', 'assignments', 'users', 'logs', 'bin', 'messages', 'settings'].includes(item.id);
-    return ['home', 'assignments', 'messages', 'settings'].includes(item.id);
+    if (role === 'leader') return ['home', 'activities', 'assignments', 'cleaning', 'users', 'logs', 'bin', 'messages', 'settings'].includes(item.id);
+    return ['home', 'activities', 'assignments', 'cleaning', 'messages', 'settings'].includes(item.id);
   });
 
   return `

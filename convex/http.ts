@@ -24,27 +24,21 @@ const corsHeaders = {
 // ============================================
 
 const localLogin = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const { username, password } = await request.json();
     const result = await ctx.runMutation(api.localAuth.login, { username, password });
     return new Response(JSON.stringify(result), { headers: corsHeaders });
 });
 
 const localRegister = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const { username, password, name, email } = await request.json();
     const result = await ctx.runMutation(api.localAuth.register, { username, password, name, email });
     return new Response(JSON.stringify(result), { headers: corsHeaders });
 });
 
 const localCreateUser = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const { username, password, name, email, role, calling } = await request.json();
     const result = await ctx.runMutation(api.localAuth.createUser, { username, password, name, email, role, calling });
     return new Response(JSON.stringify(result), { headers: corsHeaders });
@@ -80,69 +74,115 @@ const getUpcomingAssignments = httpAction(async (ctx) => {
 });
 
 const createAssignment = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const data = await request.json();
     const id = await ctx.runMutation(api.assignments.create, data);
     return new Response(JSON.stringify({ success: true, id }), { headers: corsHeaders });
 });
 
 const updateAssignment = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const data = await request.json();
     const result = await ctx.runMutation(api.assignments.update, data);
     return new Response(JSON.stringify(result), { headers: corsHeaders });
 });
 
 const deleteAssignment = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const { id } = await request.json();
     const result = await ctx.runMutation(api.assignments.remove, { id });
     return new Response(JSON.stringify(result), { headers: corsHeaders });
 });
 
+// ============================================
+// REFERENCE INDEXES API
+// ============================================
+
 // Hymns
 const getHymns = httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const category = url.searchParams.get("category") || undefined;
-    const hymns = await ctx.runQuery(api.assignments.getHymns, { category });
+    const hymns = await ctx.runQuery(api.referenceIndexes.getHymns, { category });
     return new Response(JSON.stringify({ hymns }), { headers: corsHeaders });
 });
 
 const addHymn = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const data = await request.json();
-    const id = await ctx.runMutation(api.assignments.addHymn, data);
+    const id = await ctx.runMutation(api.referenceIndexes.addHymn, data);
     return new Response(JSON.stringify({ success: true, id }), { headers: corsHeaders });
 });
 
-// Members
-const getMembers = httpAction(async (ctx) => {
-    const members = await ctx.runQuery(api.assignments.getMembers);
-    return new Response(JSON.stringify({ members }), { headers: corsHeaders });
+// CFM Lessons
+const getCfmLessons = httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const year = parseInt(url.searchParams.get("year") || "2026");
+    const lessons = await ctx.runQuery(api.referenceIndexes.getCfmLessons, { year });
+    return new Response(JSON.stringify({ lessons }), { headers: corsHeaders });
 });
 
-const addMember = httpAction(async (ctx, request) => {
-    if (request.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+// Gospel Principles
+const getGospelPrinciples = httpAction(async (ctx) => {
+    const principles = await ctx.runQuery(api.referenceIndexes.getGospelPrinciples);
+    return new Response(JSON.stringify({ principles }), { headers: corsHeaders });
+});
+
+// Conference Talks
+const getConferenceTalks = httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const yearParam = url.searchParams.get("year");
+    const year = yearParam ? parseInt(yearParam) : undefined;
+    const talks = await ctx.runQuery(api.referenceIndexes.getConferenceTalks, { year });
+    return new Response(JSON.stringify({ talks }), { headers: corsHeaders });
+});
+
+// Delegation
+const getDelegations = httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const organization = url.searchParams.get("organization") || undefined;
+    const delegations = await ctx.runQuery(api.referenceIndexes.getDelegations, { organization });
+    return new Response(JSON.stringify({ delegations }), { headers: corsHeaders });
+});
+
+// Master Seed - Seeds all indexes
+const seedAllData = httpAction(async (ctx) => {
+    const results = {
+        hymns: await ctx.runMutation(api.referenceIndexes.seedHymnIndex),
+        cfm: await ctx.runMutation(api.referenceIndexes.seedCfmIndex),
+        gospelPrinciples: await ctx.runMutation(api.referenceIndexes.seedGospelPrinciples),
+        conferenceTalks: await ctx.runMutation(api.referenceIndexes.seedConferenceTalks),
+        delegation: await ctx.runMutation(api.referenceIndexes.seedDelegation),
+        announcements: await ctx.runMutation(api.referenceIndexes.seedAnnouncements),
+        meetingTypes: await ctx.runMutation(api.referenceIndexes.seedMeetingTypes),
+        assignments: await ctx.runMutation(api.assignments.seed2026),
+    };
+    return new Response(JSON.stringify(results), { headers: corsHeaders });
+});
+
+// Meeting Types
+const getMeetingTypes = httpAction(async (ctx) => {
+    const types = await ctx.runQuery(api.referenceIndexes.getMeetingTypes);
+    return new Response(JSON.stringify({ types }), { headers: corsHeaders });
+});
+
+const updateMeetingType = httpAction(async (ctx, request) => {
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     const data = await request.json();
-    const id = await ctx.runMutation(api.assignments.addMember, data);
-    return new Response(JSON.stringify({ success: true, id }), { headers: corsHeaders });
+    await ctx.runMutation(api.referenceIndexes.updateMeetingType, data);
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
 });
 
-// Seed
-const seedData = httpAction(async (ctx) => {
-    const hymnsResult = await ctx.runMutation(api.assignments.seedHymns);
-    const assignmentsResult = await ctx.runMutation(api.assignments.seed2026Assignments);
-    return new Response(JSON.stringify({ hymns: hymnsResult, assignments: assignmentsResult }), { headers: corsHeaders });
+// Announcements
+const getAnnouncements = httpAction(async (ctx) => {
+    const announcements = await ctx.runQuery(api.referenceIndexes.getAnnouncements);
+    return new Response(JSON.stringify({ announcements }), { headers: corsHeaders });
+});
+
+const createAnnouncement = httpAction(async (ctx, request) => {
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+    const data = await request.json();
+    const id = await ctx.runMutation(api.referenceIndexes.addAnnouncement, data);
+    return new Response(JSON.stringify({ success: true, id }), { headers: corsHeaders });
 });
 
 // ============================================
@@ -156,7 +196,7 @@ http.route({ path: "/sign-out", method: "GET", handler: signOut });
 http.route({ path: "/auth/refresh", method: "POST", handler: refresh });
 http.route({ path: "/auth/refresh", method: "OPTIONS", handler: refresh });
 
-// Local Auth Routes
+// Local Auth
 http.route({ path: "/local/login", method: "POST", handler: localLogin });
 http.route({ path: "/local/login", method: "OPTIONS", handler: localLogin });
 http.route({ path: "/local/register", method: "POST", handler: localRegister });
@@ -165,14 +205,12 @@ http.route({ path: "/local/users", method: "GET", handler: localListUsers });
 http.route({ path: "/local/users", method: "POST", handler: localCreateUser });
 http.route({ path: "/local/users", method: "OPTIONS", handler: localCreateUser });
 
-// WorkOS Users
+// Users
 http.route({ path: "/users", method: "GET", handler: listUsers });
 http.route({ path: "/users/invite", method: "POST", handler: inviteUser });
 http.route({ path: "/users/invite", method: "OPTIONS", handler: inviteUser });
 http.route({ path: "/users/update", method: "POST", handler: updateUser });
 http.route({ path: "/users/update", method: "OPTIONS", handler: updateUser });
-
-// Bin & Archive
 http.route({ path: "/users/delete", method: "POST", handler: softDeleteUser });
 http.route({ path: "/users/delete", method: "OPTIONS", handler: softDeleteUser });
 http.route({ path: "/users/permanent-delete", method: "POST", handler: permanentDeleteUser });
@@ -180,7 +218,7 @@ http.route({ path: "/users/permanent-delete", method: "OPTIONS", handler: perman
 http.route({ path: "/users/restore", method: "POST", handler: restoreUser });
 http.route({ path: "/users/restore", method: "OPTIONS", handler: restoreUser });
 
-// Admin / Audit / Config
+// Admin
 http.route({ path: "/admin/events", method: "GET", handler: listEvents });
 http.route({ path: "/admin/bin", method: "GET", handler: listBin });
 http.route({ path: "/admin/roles", method: "GET", handler: listRoles });
@@ -201,18 +239,24 @@ http.route({ path: "/assignments/update", method: "OPTIONS", handler: updateAssi
 http.route({ path: "/assignments/delete", method: "POST", handler: deleteAssignment });
 http.route({ path: "/assignments/delete", method: "OPTIONS", handler: deleteAssignment });
 
-// Hymns
-http.route({ path: "/hymns", method: "GET", handler: getHymns });
-http.route({ path: "/hymns", method: "POST", handler: addHymn });
-http.route({ path: "/hymns", method: "OPTIONS", handler: addHymn });
+// Reference Indexes
+http.route({ path: "/indexes/hymns", method: "GET", handler: getHymns });
+http.route({ path: "/indexes/hymns", method: "POST", handler: addHymn });
+http.route({ path: "/indexes/hymns", method: "OPTIONS", handler: addHymn });
+http.route({ path: "/indexes/cfm", method: "GET", handler: getCfmLessons });
+http.route({ path: "/indexes/gospel-principles", method: "GET", handler: getGospelPrinciples });
+http.route({ path: "/indexes/conference-talks", method: "GET", handler: getConferenceTalks });
+http.route({ path: "/indexes/delegation", method: "GET", handler: getDelegations });
+http.route({ path: "/indexes/announcements", method: "GET", handler: getAnnouncements });
+http.route({ path: "/indexes/announcements", method: "POST", handler: createAnnouncement });
+http.route({ path: "/indexes/announcements", method: "OPTIONS", handler: createAnnouncement });
 
-// Members
-http.route({ path: "/members", method: "GET", handler: getMembers });
-http.route({ path: "/members", method: "POST", handler: addMember });
-http.route({ path: "/members", method: "OPTIONS", handler: addMember });
+http.route({ path: "/indexes/meeting-types", method: "GET", handler: getMeetingTypes });
+http.route({ path: "/indexes/meeting-types", method: "POST", handler: updateMeetingType });
+http.route({ path: "/indexes/meeting-types", method: "OPTIONS", handler: updateMeetingType });
 
-// Seed data
-http.route({ path: "/seed", method: "GET", handler: seedData });
+// Seed all data
+http.route({ path: "/seed", method: "GET", handler: seedAllData });
 
 // Default
 http.route({ path: "/", method: "GET", handler: home });
